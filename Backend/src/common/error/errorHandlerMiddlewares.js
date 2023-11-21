@@ -4,7 +4,8 @@ const { ResponseMapper } = require("../response/ResponseMapper");
 const { DataAlreadyExistException, 
   DataNotFoundException, 
   ResourceNotFoundException, 
-  NotPermissionException} = require("./throwExceptionHandler")
+  NotPermissionException,
+  ArgumentNotValid} = require("./throwExceptionHandler")
 
 const notFound = (req, res, next) => {
   const error = new Error(`Not Found : ${req.originalUrl}`);
@@ -14,22 +15,42 @@ const notFound = (req, res, next) => {
 
 const errorHandler = (err, req, res, next) => {
   if (err instanceof DataAlreadyExistException) {
-    response = ResponseMapper.toDataResponse(err.message, StatusCode.DATA_CONFLICT, StatusMessage.DATA_CONFLICT);
-    res.status(200).json(response);
+    response = ResponseMapper.toDataResponse(err?.message, StatusCode.DATA_CONFLICT, StatusMessage.DATA_CONFLICT);
+    res.status(200);
+    res.json(response);
   }
-  if (err instanceof DataNotFoundException) {
-    response = ResponseMapper.toDataResponse(err.message, StatusCode.DATA_NOT_FOUND, StatusMessage.DATA_NOT_FOUND);
-    res.status(200).json(response);
+  else if (err instanceof DataNotFoundException) {
+    response = ResponseMapper.toDataResponse(err?.message, StatusCode.DATA_NOT_FOUND, StatusMessage.DATA_NOT_FOUND);
+    res.status(200);
+    res.json(response);
   }
-  if (err instanceof ResourceNotFoundException) {
-    response = ResponseMapper.toDataResponse(err.message, StatusCode.DATA_NOT_FOUND, StatusMessage.DATA_NOT_FOUND);
-    res.status(200).json(response);
+  else if (err instanceof ResourceNotFoundException) {
+    response = ResponseMapper.toDataResponse(err?.message, StatusCode.DATA_NOT_FOUND, StatusMessage.DATA_NOT_FOUND);
+    res.status(200);
+    res.json(response);
   }
-  if (err instanceof NotPermissionException) {
-    response = ResponseMapper.toDataResponse(err.message, StatusCode.NOT_PERMISSION, StatusMessage.NOT_PERMISSION);
-    res.status(200).json(response);
+  else if (err instanceof NotPermissionException) {
+    response = ResponseMapper.toDataResponse(err?.message, StatusCode.NOT_PERMISSION, StatusMessage.NOT_PERMISSION);
+    res.status(200);
+    res.json(response);
+  }
+  else if (err instanceof ArgumentNotValid) {
+    response = ResponseMapper.toDataResponse(err?.message, StatusCode.DATA_NOT_MAP, StatusMessage.DATA_NOT_MAP);
+    res.status(200);
+    res.json(response);
+  }
+  else if (err instanceof Error) {
+    response = ResponseMapper.toDataResponse(err?.message, StatusCode.NOT_IMPLEMENTED, StatusMessage.NOT_IMPLEMENTED);
+    res.status(200);
+    res.json(response);
   }
 
+  // Default throw exception
+  // res.status(500).json(res.json({
+  //   status: "fail",
+  //   message: err?.message,
+  //   stack: err?.stack,
+  // }));
 };
 
 

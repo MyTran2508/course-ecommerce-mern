@@ -12,11 +12,13 @@ var userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
+      require: true,
       unique: true,
     },
     username: {
       type: String,
       unique: true,
+      require: true,
       index: true
     },
     firstName: {
@@ -31,9 +33,19 @@ var userSchema = new mongoose.Schema(
     photos: {
       type: String,
     },
+    removed: {
+      type: Boolean,
+      default: false,
+    },
     roles: {
       type: [RoleSchema],
-      default: []
+      default: function () {
+        return [
+          {
+            roleId: 'ROLE_USER'
+          }
+        ];
+      }
     },
     addresses: {
       type: [Address],

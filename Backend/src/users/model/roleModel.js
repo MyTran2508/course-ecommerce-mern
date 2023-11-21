@@ -4,7 +4,7 @@ const mongoose = require('mongoose'); // Erase if already required
 const RoleSchema = new mongoose.Schema({
     roleId: {
       type: String,
-      enum: ['ROLE_ADMIN', 'ROLE_USER', 'ROLE_MANAGER'], // Thay đổi các giá trị enum theo nhu cầu của bạn
+      enum: ['ROLE_ADMIN', 'ROLE_USER', 'ROLE_MANAGER'],
       default: 'ROLE_USER'
     }
 });

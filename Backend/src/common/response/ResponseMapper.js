@@ -26,9 +26,9 @@ class ResponseMapper {
     
     static toDataResponseSuccess(data) {
         if (data) {
-            return toDataResponse(data, StatusCode.REQUEST_SUCCESS, StatusMessage.REQUEST_SUCCESS);
+            return this.toDataResponse(data, StatusCode.REQUEST_SUCCESS, StatusMessage.REQUEST_SUCCESS);
         } else {
-            return toDataResponse(null, StatusCode.DATA_NOT_FOUND, StatusMessage.DATA_NOT_FOUND);
+            return this.toDataResponse(null, StatusCode.DATA_NOT_FOUND, StatusMessage.DATA_NOT_FOUND);
         }
     }
     static toListResponseSuccess(list) {

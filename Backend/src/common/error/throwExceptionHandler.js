@@ -28,9 +28,17 @@ class NotPermissionException extends Error {
   }
 }
 
+class ArgumentNotValid extends Error {
+  constructor(message) {
+    super(message);
+    this.name = "ArgumentNotValid";
+  }
+}
+
 module.exports = {
   DataAlreadyExistException,
   DataNotFoundException,
   ResourceNotFoundException,
   NotPermissionException,
+  ArgumentNotValid,
 };

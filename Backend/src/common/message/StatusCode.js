@@ -1,0 +1,10 @@
+const StatusCode = {
+  REQUEST_SUCCESS: 200,
+  DATA_NOT_FOUND: 404,
+  DATA_NOT_MAP: 406,
+  NOT_IMPLEMENTED: 501,
+  DATA_CONFLICT: 409,
+  NOT_PERMISSION: 403,
+};
+
+module.exports = {StatusCode}

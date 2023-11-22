@@ -60,7 +60,8 @@ const updateUser = asyncHandler(async (req, res) => {
         new: true,
       }
     );
-    res.json(updatedUser);
+    response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    res.json(response);
   } catch(error) {
     console.log(error);
     throw new Error(error);
@@ -80,11 +81,69 @@ const setRemovedUser = asyncHandler(async (req, res) => {
         new: true,
       }
     );
-    res.json(updatedUser);
+    response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    res.json(response);
   } catch(error) {
     console.log(error);
     throw new Error(error);
   }
 })
 
-module.exports = { createUser, getAllUser, updateUser, setRemovedUser };
+const getByUsername = asyncHandler(async (req, res) => {
+  // Output: DataResponse<User>
+})
+
+const changePassword = asyncHandler(async (req, res) => {
+  /*
+  Input: 
+  params: ID
+  ChangePasswordRequest {
+    oldPassword: 'key',
+    newPassword: 'key',
+  }
+  */
+  // Output: DataResponse<String>
+})
+
+const sendOtpRegister = asyncHandler(async (req, res) => {
+  // Output: DataResponse<String>
+})
+
+const verifyAndSaveRegister = asyncHandler(async (req, res) => {
+  // Output: DataResponse<String>
+})
+
+const sendOtpForgetPass = asyncHandler(async (req, res) => {
+  // Output: DataResponse<String>
+})
+
+const verifyAndSaveForgetPass = asyncHandler(async (req, res) => {
+  // DataResponse<String>
+})
+
+const searchByKeyword = asyncHandler(async (req, res) => {
+  /*
+  Input: SearchKeywordDto {
+    keyword: 'key',
+    pageIndex: 1,
+    pageSize: 1,
+    sortBy(field): "username", (Optional)
+    isDecrease: true/false (Optional)
+  }
+  */
+})
+
+const getAvatar = asyncHandler(async (req, res) => {
+  // Input: username
+  // Output: base64 image
+})
+
+const uploadAvatar = asyncHandler(async (req, res) => {
+  // Input: params username, MultipartFile
+  // Output DataResponse<String> (is filePath to image)
+})
+
+
+module.exports = { createUser, getAllUser, updateUser, setRemovedUser, 
+  getByUsername, sendOtpRegister, verifyAndSaveRegister, changePassword, sendOtpForgetPass,
+  verifyAndSaveForgetPass, searchByKeyword, getAvatar, uploadAvatar };

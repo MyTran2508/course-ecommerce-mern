@@ -1,5 +1,4 @@
-import { User } from "../model/userModel";
-// const User = require("../model/userModel");
+const User = require("../model/userModel");
 const Address = require("../model/userModel");
 const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
@@ -19,10 +18,14 @@ const createUser = asyncHandler(async (req, res) => {
   const users = await User.find({
     $or: [{ username: username }, { email: email }],
   });
+  console.log("đã zô" + users);
   if (!users || users.length === 0) {
     try {
       const newUser = await User.create(req.body);
-      response = ResponseMapper.toDataResponseSuccess(newUser);
+      console.log(newUser);
+      const response = ResponseMapper.toDataResponseSuccess(newUser);
+      const userJSON = newUser.toJSON();
+      response.data = userJSON;
       res.status(200).json(response);
     } catch (error) {
       throw new Error(error);

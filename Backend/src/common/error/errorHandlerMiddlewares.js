@@ -44,13 +44,6 @@ const errorHandler = (err, req, res, next) => {
     res.status(200);
     res.json(response);
   }
-
-  // Default throw exception
-  // res.status(500).json(res.json({
-  //   status: "fail",
-  //   message: err?.message,
-  //   stack: err?.stack,
-  // }));
 };
 
 

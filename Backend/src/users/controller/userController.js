@@ -1,5 +1,4 @@
 const User = require("../model/userModel");
-const Address = require("../model/userModel");
 const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
 const {ResponseMapper} = require("../../common/response/ResponseMapper")
@@ -21,7 +20,7 @@ const createUser = asyncHandler(async (req, res) => {
   if (!users || users.length === 0) {
     try {
       const newUser = await User.create(req.body);
-      response = ResponseMapper.toDataResponseSuccess(newUser);
+      const response = ResponseMapper.toDataResponseSuccess(newUser);
       res.status(200).json(response);
     } catch(error) {
       throw new Error(error);
@@ -34,7 +33,7 @@ const createUser = asyncHandler(async (req, res) => {
 const getAllUser = asyncHandler(async (req, res) => {
   try {
     const getUsers = await User.find();
-    response = ResponseMapper.toDataResponseSuccess(getUsers);
+    const response = ResponseMapper.toListResponseSuccess(getUsers);
     res.status(200).json(response);
   } catch (error) {
     throw new Error(error);
@@ -51,8 +50,7 @@ const updateUser = asyncHandler(async (req, res) => {
       {
         firstName: req?.body?.firstName,
         lastName: req?.body?.lastName,
-        email: req?.body?.email,
-        username: req?.body?.username,
+        telephone: req?.body?.telephone,
         roles: req?.body?.roles,
         addresses: req?.body?.addresses
       },
@@ -60,11 +58,11 @@ const updateUser = asyncHandler(async (req, res) => {
         new: true,
       }
     );
-    response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    const response = ResponseMapper.toDataResponseSuccess(updatedUser);
     res.json(response);
   } catch(error) {
     console.log(error);
-    throw new Error(error);
+    throw new ResourceNotFoundException(id + " does not exists in DB");
   }
 })
 
@@ -81,11 +79,11 @@ const setRemovedUser = asyncHandler(async (req, res) => {
         new: true,
       }
     );
-    response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    const response = ResponseMapper.toDataResponseSuccess(updatedUser);
     res.json(response);
   } catch(error) {
     console.log(error);
-    throw new Error(error);
+    throw new ResourceNotFoundException(id + " does not exists in DB");
   }
 })
 

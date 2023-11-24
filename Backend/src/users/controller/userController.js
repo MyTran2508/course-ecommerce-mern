@@ -1,5 +1,4 @@
 const User = require("../model/userModel");
-const Address = require("../model/userModel");
 const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
 const { ResponseMapper } = require("../../common/response/ResponseMapper");
@@ -22,10 +21,7 @@ const createUser = asyncHandler(async (req, res) => {
   if (!users || users.length === 0) {
     try {
       const newUser = await User.create(req.body);
-      console.log(newUser);
       const response = ResponseMapper.toDataResponseSuccess(newUser);
-      const userJSON = newUser.toJSON();
-      response.data = userJSON;
       res.status(200).json(response);
     } catch (error) {
       throw new Error(error);
@@ -38,7 +34,7 @@ const createUser = asyncHandler(async (req, res) => {
 const getAllUser = asyncHandler(async (req, res) => {
   try {
     const getUsers = await User.find();
-    response = ResponseMapper.toDataResponseSuccess(getUsers);
+    const response = ResponseMapper.toListResponseSuccess(getUsers);
     res.status(200).json(response);
   } catch (error) {
     throw new Error(error);
@@ -55,8 +51,7 @@ const updateUser = asyncHandler(async (req, res) => {
       {
         firstName: req?.body?.firstName,
         lastName: req?.body?.lastName,
-        email: req?.body?.email,
-        username: req?.body?.username,
+        telephone: req?.body?.telephone,
         roles: req?.body?.roles,
         addresses: req?.body?.addresses,
       },
@@ -64,10 +59,11 @@ const updateUser = asyncHandler(async (req, res) => {
         new: true,
       }
     );
-    res.json(updatedUser);
+    const response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    res.json(response);
   } catch (error) {
     console.log(error);
-    throw new Error(error);
+    throw new ResourceNotFoundException(id + " does not exists in DB");
   }
 });
 
@@ -84,11 +80,80 @@ const setRemovedUser = asyncHandler(async (req, res) => {
         new: true,
       }
     );
-    res.json(updatedUser);
+    const response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    res.json(response);
   } catch (error) {
     console.log(error);
-    throw new Error(error);
+    throw new ResourceNotFoundException(id + " does not exists in DB");
   }
 });
 
-module.exports = { createUser, getAllUser, updateUser, setRemovedUser };
+const getByUsername = asyncHandler(async (req, res) => {
+  // Output: DataResponse<User>
+});
+
+const changePassword = asyncHandler(async (req, res) => {
+  /*
+  Input: 
+  params: ID
+  ChangePasswordRequest {
+    oldPassword: 'key',
+    newPassword: 'key',
+  }
+  */
+  // Output: DataResponse<String>
+});
+
+const sendOtpRegister = asyncHandler(async (req, res) => {
+  // Output: DataResponse<String>
+});
+
+const verifyAndSaveRegister = asyncHandler(async (req, res) => {
+  // Output: DataResponse<String>
+});
+
+const sendOtpForgetPass = asyncHandler(async (req, res) => {
+  // Output: DataResponse<String>
+});
+
+const verifyAndSaveForgetPass = asyncHandler(async (req, res) => {
+  // DataResponse<String>
+});
+
+const searchByKeyword = asyncHandler(async (req, res) => {
+  /*
+  Input: SearchKeywordDto {
+    keyword: 'key',
+    pageIndex: 1,
+    pageSize: 1,
+    sortBy(field): "username", (Optional)
+    isDecrease: true/false (Optional)
+  }
+  */
+});
+
+const getAvatar = asyncHandler(async (req, res) => {
+  // Input: username
+  // Output: base64 image
+});
+
+const uploadAvatar = asyncHandler(async (req, res) => {
+  // Input: params username, MultipartFile
+  // Output DataResponse<String> (is filePath to image)
+});
+
+module.exports = {
+  createUser,
+  getAllUser,
+  updateUser,
+  setRemovedUser,
+  getByUsername,
+  sendOtpRegister,
+  verifyAndSaveRegister,
+  changePassword,
+  sendOtpForgetPass,
+  verifyAndSaveForgetPass,
+  searchByKeyword,
+  getAvatar,
+  uploadAvatar,
+};

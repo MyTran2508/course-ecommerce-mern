@@ -4,6 +4,8 @@ const app = express();
 const dotenv = require("dotenv").config();
 const PORT = process.env.PORT || 8082;
 const usesRoute = require("./users/usersRouter");
+const courseRouter = require("./courses/coursesRouter");
+
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const {
@@ -21,6 +23,7 @@ app.use(cookieParser());
 
 // Route to services
 app.use("/api/users", usesRoute);
+app.use("/api/courses", courseRouter);
 
 //
 app.use(notFound);

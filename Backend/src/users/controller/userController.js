@@ -9,11 +9,11 @@ const {
   ResourceNotFoundException,
   NotPermissionException,
 } = require("../../common/error/throwExceptionHandler");
-const sendMail = require("../utils/mailUtil");
-const { generateOTP, validateOTP } = require("../utils/otpUtil");
-const { StatusCode } = require("../../common/message/StatusCode");
-const { StatusMessage } = require("../../common/message/StatusMessage");
-const { typeMessage } = require("../utils/typeMessage");
+import sendMail from "../utils/mailUtil";
+import { generateOTP, validateOTP } from "../utils/otpUtil";
+import { StatusCode } from "../../common/message/StatusCode";
+import { StatusMessage } from "../../common/message/StatusMessage";
+import typeMessage from "../utils/typeMessage";
 
 const createUser = asyncHandler(async (req, res) => {
   const username = req.body.username;

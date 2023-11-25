@@ -54,13 +54,16 @@ var userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
   }
 );
-userSchema.virtual("id").get(function () {
-  return this._id.toHexString();
-});
 
-userSchema.set("toJSON", { virtuals: true });
+userSchema.set("toJSON", {
+  transform: function (doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+  },
+});
 
 userSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSaltSync(10);

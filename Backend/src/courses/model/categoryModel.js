@@ -18,12 +18,29 @@ var categorySchema = new mongoose.Schema({
     removed: {
         type: Boolean,
         default: false
+    },
+    created: {
+        type: Number
+    },
+    updated: {
+        type: Number
     }
-},
-{
-    timestamps: true,
-}
-);
+});
+
+categorySchema.pre("save", async function (next) {
+    this.created = new Date().getTime();
+    this.updated = new Date().getTime();
+});
+
+
+categorySchema.pre('updateOne', function(next) {
+    this.updated = new Date().getTime();
+});
+  
+categorySchema.pre('updateMany', function(next) {
+    this.updated = new Date().getTime();
+});
+  
 
 //Export the model
 module.exports = mongoose.model('Category', categorySchema);

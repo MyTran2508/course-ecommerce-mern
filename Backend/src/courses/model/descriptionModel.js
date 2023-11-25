@@ -1,15 +1,17 @@
 const mongoose = require('mongoose'); // Erase if already required
 
 // Declare the Schema of the Mongo model
-var topicSchema = new mongoose.Schema({
-    name: {
+var descriptionSchema = new mongoose.Schema({
+    requirements: {
         type:String,
-        required:true,
     },
-    description: {
+    details: {
         type:String,
-    }
+    },
+    targetConsumers: {
+        type:String,
+    },
 });
 
 //Export the model
-module.exports = topicSchema
+module.exports = descriptionSchema

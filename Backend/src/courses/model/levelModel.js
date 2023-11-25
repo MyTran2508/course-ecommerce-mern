@@ -5,7 +5,7 @@ var levelSchema = new mongoose.Schema({
     name: {
         type: String,
         enum: ['Beginner', 'Intermediate', 'Expert', 'All Level'],
-        default: 'All Level'
+        default: 'All Level',
     },
 });
 

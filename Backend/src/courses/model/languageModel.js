@@ -5,7 +5,7 @@ var languageSchema = new mongoose.Schema({
     name: {
         type: String,
         enum: ['Vietnamese', 'English'],
-        default: 'Vietnamese'
+        default: 'Vietnamese',
     },
 });
 

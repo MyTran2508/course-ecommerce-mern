@@ -10,7 +10,6 @@ const {
   ResourceNotFoundException,
   NotPermissionException,
 } = require("../../common/error/throwExceptionHandler");
-const { response } = require('express');
 
 const add = asyncHandler(async (req, res) => {
     const name = req?.body?.name;
@@ -62,7 +61,6 @@ const getAll = asyncHandler(async (req, res) => {
 
 const getById = asyncHandler(async (req, res) => {
   const id = req.query.id;
-  validateId(id);
   const category = await Category.findById(id);
   if(category) {
     const response = ResponseMapper.toDataResponseSuccess(category);
@@ -74,7 +72,7 @@ const getById = asyncHandler(async (req, res) => {
 
 const getByName = asyncHandler(async (req, res) => {
   const { name } = req.params;
-  const category = await Category.findOne({name: name});
+  const category = await Category.findOne({'name': name});
   if(category) {
     const response = ResponseMapper.toDataResponseSuccess(category);
     res.json(response);
@@ -85,7 +83,6 @@ const getByName = asyncHandler(async (req, res) => {
 
 const setRemoved = asyncHandler(async (req, res) => {
   const { id } = req.params;
-  validateId(id);
   try {
     const updateCategory = await Category.findByIdAndUpdate(
       id,

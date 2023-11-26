@@ -42,14 +42,5 @@ orderSchema.pre("save", async function (next) {
     this.updated = new Date().getTime();
 });
 
-
-orderSchema.pre('updateOne', function(next) {
-    this.updated = new Date().getTime();
-});
-  
-orderSchema.pre('updateMany', function(next) {
-    this.updated = new Date().getTime();
-});
-
 //Export the model
 module.exports = mongoose.model('Order', orderSchema);

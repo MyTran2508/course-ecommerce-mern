@@ -114,7 +114,8 @@ const uploadCourseImage = asyncHandler(async (req, res) => {
         console.log(file);
         const result = await uploadFile(file);
         await unlinkFile(file.path)
-        res.json(result);
+        const response = ResponseMapper.toDataResponseSuccess(result);
+        res.json(response);
     } catch(error) {
         console.log(error);
     }
@@ -127,11 +128,16 @@ const uploadCourseVideo = asyncHandler(async (req, res) => {
         console.log(file);
         const result = await uploadFile(file);
         await unlinkFile(file.path)
-        res.json(result);
+        const response = ResponseMapper.toDataResponseSuccess(result);
+        res.json(response);
     } catch(error) {
         console.log(error);
     }
 })
 
+const getAllCourseProgressByUserId = asyncHandler(async (req, res) => {
+
+})
+
 module.exports = {add, update, getById, getNewestCourse, getPopularCourse, 
-    getFiltedCourse, loadFile, uploadCourseImage, uploadCourseVideo};
+    getFiltedCourse, loadFile, uploadCourseImage, uploadCourseVideo, getAllCourseProgressByUserId};

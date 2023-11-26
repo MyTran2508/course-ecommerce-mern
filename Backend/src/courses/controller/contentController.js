@@ -1,5 +1,6 @@
 const Content = require('../model/contentModel');
 const Course = require('../model/courseModel');
+const Section = require('../model/sectionModel');
 const asyncHandler = require("express-async-handler");
 const {ResponseMapper} = require("../../common/response/ResponseMapper")
 const validateId = require("../../common/utils/validateId")
@@ -16,6 +17,9 @@ const getById = asyncHandler(async (req, res) => {
     const id = req.query.id;
     const content = await Content.findById(id);
     if(content) {
+        const sectionsId = content.sections;
+        const listSection = await Section.find({ _id: { $in: sectionsId}})
+        content.sections = listSection;
         const response = ResponseMapper.toDataResponseSuccess(content);
         res.json(response);
     } else {

@@ -13,7 +13,17 @@ var sectionSchema = new mongoose.Schema({
         type: [lectureSchema],
         default: []
     },
+    totalDurationVideoLectures: {
+        type: Number
+    },
+    content: { type: mongoose.Schema.Types.ObjectId, ref: "Content" }
 });
 
+
+sectionSchema.pre("save", async function (next) {
+    this.totalDurationVideoLectures = this.lectures.reduce((total, lecture) => total + lecture.videoDuration, 0)
+});
+
+
 //Export the model
-module.exports = sectionSchema;
+module.exports = mongoose.model('Section', sectionSchema);

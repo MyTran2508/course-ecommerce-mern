@@ -9,6 +9,7 @@ const validateId = require("../../common/utils/validateId")
 const { StatusCode } = require("../../common/message/StatusCode");
 const { StatusMessage } = require("../../common/message/StatusMessage");
 const { StorageService } = require("../../common/service/storageService");
+const {cloudinary} = require("../../common/config/cloudinary");
 // const bcrypt = require("../../common/utils/bcrypt");
 
 
@@ -198,6 +199,7 @@ const uploadAvatar = asyncHandler(async (req, res) => {
   try {
     const storageService = new StorageService();
     const user = await User.findOne({ username: req.params.username });
+    console.log(user);
     if (!user) {
       throw new Error('User not found!');
     }

@@ -1,0 +1,16 @@
+PORT=8080
+MONGODB_URL=mongodb://localhost:27017/course-ecommerce
+JWT_SECRET=38b49ee78fc593692b9bdd533cb71c2630d0f4f3c596a1ad1a484c889361a281
+ACCESS_KEY=AKIASM6NOJNMVX3LOXX2
+SECRET_KEY=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
+REGION=ap-southeast-1
+BUCKET=course-mern
+
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=mailserver.hcmute.edu@gmail.com
+MAIL_PASSWORD=kgafelhucbjgmnov
+MAIL_ENCRYPTION=TLS
+MAIL_FROM_ADDRESS=mailserver.hcmute.edu@gmail.com
+MAIL_FROM_NAME="TEST"

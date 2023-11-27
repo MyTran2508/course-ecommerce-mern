@@ -8,6 +8,12 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const { notFound, errorHandler } = require("./common/error/errorHandlerMiddlewares");
 
+// config swagger
+// const swaggerUi = require("swagger-ui-express");
+// const swaggerDocument = require("./swagger.json");
+
+// app.use("/api/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
 // Connect to database
 dbConnect();
 
@@ -28,3 +34,8 @@ app.use(errorHandler)
 app.listen(PORT, () => {
   console.log(`Server is running on port: ${PORT}`);
 });
+
+// // Path: Backend/src/common/config/dbConnect.js
+// const mongoose = require("mongoose");
+// const dotenv = require("dotenv").config();
+

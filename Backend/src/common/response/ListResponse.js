@@ -43,10 +43,10 @@ class ListResponse {
         this.totalPages = value;
     }
 
-    get data() {
+    get _data() {
         return this.data;
     }
-    set data(value) {
+    set _data(value) {
         this.data = value;
     }
 }

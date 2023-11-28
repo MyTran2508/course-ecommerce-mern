@@ -1,8 +1,8 @@
 const mongoose = require("mongoose"); // Erase if already required
 const bcrypt = require("bcrypt");
 const ObjectId = require("mongodb").ObjectId;
-const Address = require("./addressModel")
-const RoleSchema = require("./roleModel")
+const Address = require("./addressModel");
+const RoleSchema = require("./roleModel");
 
 // Declare the Schema of the Mongo model
 var userSchema = new mongoose.Schema(
@@ -19,7 +19,7 @@ var userSchema = new mongoose.Schema(
       type: String,
       unique: true,
       require: true,
-      index: true
+      index: true,
     },
     firstName: {
       type: String,
@@ -42,20 +42,28 @@ var userSchema = new mongoose.Schema(
       default: function () {
         return [
           {
-            roleId: 'ROLE_USER'
-          }
+            roleId: "ROLE_USER",
+          },
         ];
-      }
+      },
     },
     addresses: {
       type: [Address],
-      default: []
-    }
+      default: [],
+    },
   },
   {
     timestamps: true,
+    toJSON: { virtuals: true },
   }
 );
+
+userSchema.set("toJSON", {
+  transform: function (doc, ret) {
+    ret.id = ret._id;
+    delete ret._id;
+  },
+});
 
 userSchema.pre("save", async function (next) {
   const salt = await bcrypt.genSaltSync(10);

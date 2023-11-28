@@ -12,7 +12,7 @@ var lectureSchema = new mongoose.Schema({
         type:String,
     },
     videoDuration: {
-        type:String,
+        type: Number,
     },
 });
 

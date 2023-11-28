@@ -8,11 +8,19 @@ var contentSchema = new mongoose.Schema({
         type: descriptionSchema,
         default: {}
     },
-    sections: {
-        type: [sectionSchema],
-        default: []
-    },
     course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
+    sections: [{ type: mongoose.Schema.Types.ObjectId, ref: "Section" }],
+    created: {
+        type: Number
+    },
+    updated: {
+        type: Number
+    },
+});
+
+contentSchema.pre("save", async function (next) {
+    this.created = new Date().getTime();
+    this.updated = new Date().getTime();
 });
 
 //Export the model

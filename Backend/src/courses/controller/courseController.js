@@ -94,11 +94,14 @@ const getNewestCourse = asyncHandler(async (req, res) => {
     }
 })
 
+// lấy những khóa học phổ biến nhất
 const getPopularCourse = asyncHandler(async (req, res) => {
 
 })
 
+// lấy danh sách khóa học theo topicId 
 const getFiltedCourse = asyncHandler(async (req, res) => {
+    
 
 })
 
@@ -136,6 +139,15 @@ const uploadCourseVideo = asyncHandler(async (req, res) => {
 })
 
 const getAllCourseProgressByUserId = asyncHandler(async (req, res) => {
+    const userId = req.params.userId;
+    try {
+        const courses = await Course.find({'courseProgress.userId': userId});
+        const response = ResponseMapper.toListResponseSuccess(courses);
+        res.json(response);
+    } catch(error) {
+        console.log(error);
+        throw new Error(error);
+    }
 
 })
 

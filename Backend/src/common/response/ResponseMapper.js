@@ -31,7 +31,7 @@ class ResponseMapper {
   }
 
   static toDataResponseSuccess(data) {
-    if (data) {
+    if (data !== null && data !== undefined) {
       return this.toDataResponse(
         data,
         StatusCode.REQUEST_SUCCESS,

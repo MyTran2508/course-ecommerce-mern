@@ -3,4 +3,4 @@ const typeMessage = {
   FORGET_PASSWORD: "Forget password",
 };
 
-export default typeMessage;
+module.exports = typeMessage;

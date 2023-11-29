@@ -33,4 +33,4 @@ const clearOTPFromCache = (key) => {
   otpCache.delete(key);
 };
 
-export { generateOTP, validateOTP };
+module.exports = { generateOTP, validateOTP };

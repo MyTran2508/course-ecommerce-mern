@@ -11,6 +11,15 @@ const {
   ResourceNotFoundException,
   NotPermissionException,
 } = require("../../common/error/throwExceptionHandler");
+const { uploadFile, getFileStream } = require("../utils/awsS3Service");
+const util = require("util");
+const fs = require("fs");
+const unlinkFile = util.promisify(fs.unlink);
+const {
+  PATH_COURSE_LECTURE,
+  PATH_COURSE_DOCUMENT,
+} = require("../utils/awsS3Constant");
+const { isDocument, isVideo } = require("../utils/fileUtil");
 
 const add = asyncHandler(async (req, res) => {
   const contentId = req?.body?.content.id;
@@ -86,8 +95,50 @@ const getById = asyncHandler(async (req, res) => {
   }
 });
 
-const uploadFileSection = asyncHandler(async (req, res) => {});
+const uploadFileSection = asyncHandler(async (req, res) => {
+  const files = req.files;
+  const listPath = [];
+  const listError = [];
+  let idx = 0;
 
-const loadFile = asyncHandler(async (req, res) => {});
+  for (let file of files) {
+    try {
+      if (isDocument(file)) {
+        const path = await uploadFile(PATH_COURSE_DOCUMENT, file);
+        await unlinkFile(file.path);
+        listPath.push(path);
+      } else if (isVideo(file)) {
+        console.log(file.ordinalName);
+        const path = await uploadFile(PATH_COURSE_LECTURE, file);
+        await unlinkFile(file.path);
+        listPath.push(path);
+      } else {
+        listError.push(idx);
+      }
+    } catch (error) {
+      console.log("Error: " + error);
+      listError.push(idx);
+    } finally {
+      idx++;
+    }
+  }
+  if (listError.length > 0) {
+    const response = ResponseMapper.toDataResponse(
+      listError,
+      StatusCode.DATA_NOT_MAP,
+      StatusMessage.DATA_NOT_MAP
+    );
+    res.json(response);
+  } else {
+    const response = ResponseMapper.toDataResponseSuccess(listPath);
+    res.json(response);
+  }
+});
+
+const loadFile = asyncHandler(async (req, res) => {
+  const filePath = req.query.path;
+  const readStream = await getFileStream(filePath);
+  readStream.pipe(res);
+});
 
 module.exports = { add, update, uploadFileSection, loadFile, getById };

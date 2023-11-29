@@ -15,7 +15,6 @@ const { uploadFile, getFileStream } = require("../utils/awsS3Service");
 const util = require("util");
 const fs = require("fs");
 const unlinkFile = util.promisify(fs.unlink);
-const { PATH_COURSE_IMAGE } = require("../utils/awsS3Constant");
 
 const add = asyncHandler(async (req, res) => {
   const topicId = req?.body?.topic._id;
@@ -109,7 +108,7 @@ const uploadCourseImage = asyncHandler(async (req, res) => {
   try {
     const file = req.file;
     console.log(file);
-    const result = await uploadFile(file);
+    const result = await uploadFile("", file);
     await unlinkFile(file.path);
     const response = ResponseMapper.toDataResponseSuccess(result);
     res.json(response);
@@ -122,7 +121,7 @@ const uploadCourseVideo = asyncHandler(async (req, res) => {
   try {
     const file = req.file;
     console.log(file);
-    const result = await uploadFile(file);
+    const result = await uploadFile("", file);
     await unlinkFile(file.path);
     const response = ResponseMapper.toDataResponseSuccess(result);
     res.json(response);

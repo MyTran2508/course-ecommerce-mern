@@ -14,10 +14,10 @@ const s3 = new S3({
   secretAccessKey: secretKey
 })
 
-const uploadFile = async (file) => {
+const uploadFile = async (filePath, file) => {
   const fileStream = fs.createReadStream(file.path);
   const timestamp = new Date().getTime();
-  const pathFile = `${file.destination}${timestamp}_${file.originalname}`
+  const pathFile = `${filePath === '' ? file.destination : filePath}${timestamp}_${file.originalname}`
   const uploadParams = {
     Bucket: bucket,
     Body: fileStream,
@@ -34,6 +34,7 @@ const getFileStream = (filePath) => {
   }
   return s3.getObject(downloadParams).createReadStream()
 }
+
 
 
 

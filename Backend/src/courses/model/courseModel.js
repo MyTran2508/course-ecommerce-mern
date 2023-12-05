@@ -69,5 +69,9 @@ courseSchema.pre("save", async function (next) {
     this.updated = new Date().getTime();
 });
 
+courseSchema.statics.findPopularCourses = async function() {
+    const courses = await this.find({}).sort({price: -1}).limit(3);
+    return courses;
+}
 //Export the model
 module.exports = mongoose.model('Course', courseSchema);

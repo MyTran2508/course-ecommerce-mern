@@ -37,5 +37,20 @@ courseProgressSchema.pre("save", async function (next) {
     this.rateProgress = Math.round(rate * 100.0) / 100.0;
 });
 
+courseProgressSchema.findPopularCourses = async function() {
+    const courses = await this.aggregate([
+        {
+            $group: {
+                _id: '$courseId',
+                count: { $sum: 1 }
+            }
+        },
+        {
+            $sort: { count: -1 }
+        }
+    ]);
+    return courses;
+}
+
 //Export the model
 module.exports = mongoose.model('CourseProgress', courseProgressSchema);

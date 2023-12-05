@@ -10,6 +10,7 @@ var courseProgressSchema = new mongoose.Schema({
   totalAmountOfLecture: {
     type: Number,
   },
+  // độ tiến độ của khóa học
   rateProgress: {
     type: Number,
   },
@@ -42,22 +43,20 @@ courseProgressSchema.pre("save", async function (next) {
   this.updated = new Date().getTime();
   let rate = this.currentProgress / this.totalAmountOfLecture;
   this.rateProgress = Math.round(rate * 100.0) / 100.0;
+  next();
 });
 
-courseProgressSchema.findPopularCourses = async function() {
-    const courses = await this.aggregate([
-        {
-            $group: {
-                _id: '$courseId',
-                count: { $sum: 1 }
-            }
-        },
-        {
-            $sort: { count: -1 }
-        }
-    ]);
-    return courses;
-}
+//function find popular courses with userId truy cập nhiều nhất
+courseProgressSchema.findPopularCourses("userId", async function (userId) {
+  const courses = await CourseProgress.find({ userId: userId });
+  const coursesId = [];
+  // lấy ra những khóa học có người học nhiều nhất
+  courses.forEach((course) => {
+    coursesId.push(course.courseId);
+  });
+  return coursesId;
+});
+
 
 //Export the model
 module.exports = mongoose.model("CourseProgress", courseProgressSchema);

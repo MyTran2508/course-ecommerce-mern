@@ -73,5 +73,28 @@ courseSchema.statics.findPopularCourses = async function() {
     const courses = await this.find({}).sort({price: -1}).limit(3);
     return courses;
 }
+
+courseSchema.statics.findNewestCourses = async function() {
+    const courses = await this.find({}).sort({created: -1}).limit(3);
+    return courses;
+}
+
+courseSchema.statics.findCoursesByTopicId = async function(topicId) {
+    const courses = await this.find({"topic._id": topicId});
+    return courses;
+}
+
+courseSchema.statics.filterCourses = async function(topicId, level, language, price) {
+    const query = {
+        "topic._id": topicId,
+        "level.name": level,
+        "language.name": language,
+        "price": {$lte: price},
+    };
+
+    const courses = await this.find(query);
+    return courses;
+}
+
 //Export the model
 module.exports = mongoose.model('Course', courseSchema);

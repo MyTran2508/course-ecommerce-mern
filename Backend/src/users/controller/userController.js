@@ -17,7 +17,7 @@ const {
   ResourceNotFoundException,
   NotPermissionException,
 } = require("../../common/error/throwExceptionHandler");
-const { sendMail } = require("../utils/mailUtil");
+import sendMail from "../utils/mailUtil";
 const { generateOTP, validateOTP } = require("../utils/otpUtil");
 const typeMessage = require("../utils/typeMessage");
 // const { StatusMessage } = require("../../common/message/StatusMessage");
@@ -80,6 +80,39 @@ const updateUser = asyncHandler(async (req, res) => {
   } catch (error) {
     console.log(error);
     throw new ResourceNotFoundException(id + " does not exists in DB");
+  }
+});
+
+const updateUserAdmin = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  validateId(id);
+
+  const savedUser = await User.findById(id);
+  if (!savedUser) {
+    throw new ResourceNotFoundException("Data doesn't exists");
+  }
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        username: req?.body?.username,
+        email: req?.body?.email,
+        roles: req?.body?.roles,
+      },
+      {
+        new: true,
+      }
+    );
+    const response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    res.json(response);
+  } catch (error) {
+    console.log(error);
+    let response = ResponseMapper.toDataResponse(
+      "Data already exist",
+      StatusCode.DATA_CONFLICT,
+      StatusMessage.DATA_CONFLICT
+    );
+    res.json(response);
   }
 });
 
@@ -416,4 +449,5 @@ module.exports = {
   getAvatar,
   uploadAvatar,
   login,
+  updateUserAdmin,
 };

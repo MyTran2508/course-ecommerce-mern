@@ -1,7 +1,7 @@
 const mailConfig = require("../config/mail.config");
 const nodeMailer = require("nodemailer");
 const moment = require("moment");
-const template = require("lodash.template");
+const template = require("lodash.template"); 
 const typeMessage = { REGISTER: "Register an account", FORGET_PASSWORD: "Forget password" };
 
 const sendMail = async (email, OTP, typeMessage) => {
@@ -72,4 +72,4 @@ const getTimeExpTime5Minutes = () => {
   return expTime;
 };
 
-module.exports = { sendMail };
+export default sendMail;

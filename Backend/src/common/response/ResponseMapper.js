@@ -64,6 +64,43 @@ class ResponseMapper {
       );
     }
   }
+
+  static toPagingResponse(page, statusCode, statusMessage) {
+    if (page) {
+      const totalRecords = page.totalItems; // Sửa lại tên phương thức
+      const totalPages = Math.ceil(totalRecords / page.pageSize); // Sửa lại tính toán totalPages
+      const list = page.data; // Sửa lại tên phương thức
+      return this.toListResponse(
+        list,
+        totalRecords,
+        totalPages,
+        statusCode,
+        statusMessage
+      );
+    }
+    return this.toListResponse(
+      null,
+      0,
+      0,
+      StatusCode.DATA_NOT_FOUND,
+      StatusMessage.DATA_NOT_FOUND
+    );
+  }
+
+  static toPagingResponseSuccess(page) {
+    if (page && page.totalItems > 0) {
+      return this.toPagingResponse(
+        page,
+        StatusCode.REQUEST_SUCCESS,
+        StatusMessage.REQUEST_SUCCESS
+      );
+    }
+    return this.toPagingResponse(
+      page,
+      StatusCode.DATA_NOT_FOUND,
+      StatusMessage.DATA_NOT_FOUND
+    );
+  }
 }
 
 module.exports = { ResponseMapper };

@@ -1,16 +1,15 @@
-
 const User = require("../model/userModel");
 const mongoose = require("mongoose");
 const asyncHandler = require("express-async-handler");
-const {  ResponseMapper  } = require("../../common/response/ResponseMapper");
-const multer = require('multer');
-const validateId = require("../../common/utils/validateId");const { StatusCode } = require("../../common/message/StatusCode");
+const { ResponseMapper } = require("../../common/response/ResponseMapper");
+const multer = require("multer");
+const validateId = require("../../common/utils/validateId");
+const { StatusCode } = require("../../common/message/StatusCode");
 const { StatusMessage } = require("../../common/message/StatusMessage");
 const { StorageService } = require("../../common/service/storageService");
-const {cloudinary} = require("../../common/config/cloudinary");
-// const bcrypt = require("../../common/utils/bcrypt");
-
-
+const { cloudinary } = require("../../common/config/cloudinary");
+const { generateToken } = require("../../common/security/jwtToken");
+const bcrypt = require("bcrypt");
 
 const {
   DataAlreadyExistException,
@@ -35,11 +34,17 @@ const createUser = asyncHandler(async (req, res) => {
       const newUser = await User.create(req.body);
       const response = ResponseMapper.toDataResponseSuccess(newUser);
       res.status(200).json(response);
-    } catch  (error) {
+    } catch (error) {
       throw new Error(error);
     }
   } else {
-    throw new DataAlreadyExistException("Username or email already exists");
+    return res.json(
+      ResponseMapper.toDataResponse(
+        "Data already exist",
+        StatusCode.DATA_CONFLICT,
+        StatusMessage.DATA_CONFLICT
+      )
+    );
   }
 });
 
@@ -64,7 +69,6 @@ const updateUser = asyncHandler(async (req, res) => {
         firstName: req?.body?.firstName,
         lastName: req?.body?.lastName,
         telephone: req?.body?.telephone,
-        roles: req?.body?.roles,
         addresses: req?.body?.addresses,
       },
       {
@@ -73,9 +77,21 @@ const updateUser = asyncHandler(async (req, res) => {
     );
     const response = ResponseMapper.toDataResponseSuccess(updatedUser);
     res.json(response);
-  } catch  (error) {
+  } catch (error) {
     console.log(error);
     throw new ResourceNotFoundException(id + " does not exists in DB");
+  }
+});
+
+const login = asyncHandler(async (req, res) => {
+  const { username, password } = req.body;
+  const findUser = await User.findOne({ username });
+  if (findUser && (await findUser.isPasswordMatched(password))) {
+    res.json(
+      ResponseMapper.toDataResponseSuccess(generateToken(findUser?._id))
+    );
+  } else {
+    throw new NotPermissionException("invalid access");
   }
 });
 
@@ -94,7 +110,7 @@ const setRemovedUser = asyncHandler(async (req, res) => {
     );
     const response = ResponseMapper.toDataResponseSuccess(updatedUser);
     res.json(response);
-  } catch  (error) {
+  } catch (error) {
     console.log(error);
     throw new ResourceNotFoundException(id + " does not exists in DB");
   }
@@ -113,43 +129,32 @@ const getByUsername = asyncHandler(async (req, res) => {
 });
 
 const changePassword = asyncHandler(async (req, res) => {
-  /*
-  Input: 
-  params: ID
-  ChangePasswordRequest {
-    oldPassword: 'key',
-    newPassword: 'key',
+  const { id } = req.params;
+  validateId(id);
+  const { oldPassword, newPassword } = req.body;
+  const user = await User.findById(id);
+  if (!user) {
+    throw new DataNotFoundException("Data doesn't exists.");
   }
-  */
-  // Output: DataResponse<String>
-  try {
-    const { id } = req.params;
-    validateId(id);
-    if (!req.body) {
-      throw new Error("Please enter old password and new password!");
-    }
-    const { oldPassword, newPassword } = req.body;
-    if (!oldPassword || !newPassword) {
-      throw new Error("Please enter old password and new password!");
-    }
-    changePassword = await User.findById(id);
-    if (!changePassword) {
-      throw new Error("User not found!");
-    }
-    const isMatch = await changePassword.isPasswordMatched(oldPassword);
-    if (!isMatch) {
-      throw new Error("Old password is incorrect!");
-    }
-    const salt = await bcrypt.genSaltSync(10);
-    const hashPassword = await bcrypt.hash(newPassword, salt);
-    changePassword.password = hashPassword;
-    await changePassword.save();
-    response = ResponseMapper.toDataResponseSuccess("Change password successfully!");
-    res.status(200).json(response);
-  } catch (error) {
-    throw new Error(error);
-
+  const isMatchesPassword = await user.isPasswordMatched(oldPassword);
+  if (!isMatchesPassword) {
+    throw new DataNotFoundException("Old password is incorrect!");
   }
+  const salt = await bcrypt.genSaltSync(10);
+  const hashPassword = await bcrypt.hash(newPassword, salt);
+  await User.findByIdAndUpdate(
+    id,
+    {
+      password: hashPassword,
+    },
+    {
+      new: true,
+    }
+  );
+  let response = ResponseMapper.toDataResponseSuccess(
+    "Change password successfully!"
+  );
+  res.status(200).json(response);
 });
 
 const sendOtpRegister = asyncHandler(async (req, res) => {
@@ -267,7 +272,36 @@ const verifyAndSaveForgetPass = asyncHandler(async (req, res) => {
   }
 });
 
-const searchByKeyword = asyncHandler(async (req, res) => {
+async function searchUser(keyword, pageable) {
+  const query = {
+    $or: [
+      { username: { $regex: new RegExp(keyword, "i") } }, // Tìm kiếm không phân biệt chữ hoa/thường
+      { email: { $regex: new RegExp(keyword, "i") } },
+    ],
+  };
+
+  // try {
+  let searchQuery = await User.find(query)
+    .sort(pageable.sort)
+    .skip(pageable.pageIndex * pageable.pageSize)
+    .limit(pageable.pageSize)
+    .exec();
+
+  const results = await searchQuery;
+
+  return {
+    data: results,
+    pageIndex: pageable.pageIndex,
+    pageSize: pageable.pageSize,
+    totalItems: await User.countDocuments(query).exec(),
+  };
+  // }
+  // catch (error) {
+  //   throw new Error(error.message);
+  // }
+}
+
+const searchByKeyword = async (req, res) => {
   /*
   Input: SearchKeywordDto {
     keyword: 'key',
@@ -277,20 +311,48 @@ const searchByKeyword = asyncHandler(async (req, res) => {
     isDecrease: true/false (Optional)
   }
   */
-});
+  const searchByKeywordDto = req.body;
+  let sort = null;
+  let pageRequest = null;
+  if (searchByKeywordDto.sortBy && searchByKeywordDto.sortBy.length > 0) {
+    sort = {};
+    sort[searchByKeywordDto.sortBy] =
+      searchByKeywordDto.isDecrease || searchByKeywordDto.isDecrease == null
+        ? -1
+        : 1;
+  }
+
+  if (sort) {
+    pageRequest = {
+      pageIndex: searchByKeywordDto.pageIndex,
+      pageSize: searchByKeywordDto.pageSize,
+      sort: sort,
+    };
+  } else {
+    pageRequest = {
+      pageIndex: searchByKeywordDto.pageIndex,
+      pageSize: searchByKeywordDto.pageSize,
+    };
+  }
+
+  const results = await searchUser(searchByKeywordDto.keyword[0], pageRequest);
+  res.json(ResponseMapper.toPagingResponseSuccess(results));
+};
 
 const getAvatar = asyncHandler(async (req, res) => {
   try {
     const storageService = new StorageService();
-    const image = await storageService.loadImageFromFileSystem(req.params.username);
+    const image = await storageService.loadImageFromFileSystem(
+      req.params.username
+    );
     if (!image) {
       throw new Error("Image not found!");
     }
-    const imageBase64 = image.toString('base64');
+    const imageBase64 = image.toString("base64");
     const response = ResponseMapper.toDataResponseSuccess(imageBase64);
     res.status(200).json(response);
-  }
-  catch (error) {
+  } catch (error) {
+    console.log(error);
     throw new Error(error);
   }
 });
@@ -299,38 +361,59 @@ const uploadAvatar = asyncHandler(async (req, res) => {
   try {
     const storageService = new StorageService();
     const user = await User.findOne({ username: req.params.username });
-    console.log(user);
+    // console.log(user);
     if (!user) {
-      throw new Error('User not found!');
+      throw new DataNotFoundException("User not found!");
     }
-    if (!req.body.file) {
-      return ResponseMapper.toDataResponse(
-        "Please upload a file!",
-        StatusCode.DATA_NOT_MAP,
-        StatusMessage.DATA_NOT_MAP
-      );
-    }
-    const filePath = await storageService.uploadImageToFileSystem(req.body.file);
-    console.log(filePath);
-    if (filePath.isEmpty()) {
+    console.log(req.file);
+    if (!req.file) {
       const response = ResponseMapper.toDataResponse(
         "Invalid file format!",
         StatusCode.DATA_NOT_MAP,
         StatusMessage.DATA_NOT_MAP
       );
-      res.status(400).json(response);
+      return res.json(response);
     }
-    user.setPhotos(filePath);
-    await user.save();
-    const response = ResponseMapper.toDataResponseSuccess("Upload avatar successfully!");
-    res.status(200).json(response);
+    const filePath = await storageService.uploadImageToFileSystem(req.file);
+
+    if (filePath === "") {
+      const response = ResponseMapper.toDataResponse(
+        "Invalid file format!",
+        StatusCode.DATA_NOT_MAP,
+        StatusMessage.DATA_NOT_MAP
+      );
+      return res.json(response);
+    }
+    await User.findByIdAndUpdate(
+      user._id,
+      {
+        photos: filePath,
+      },
+      {
+        new: true,
+      }
+    );
+    const response = ResponseMapper.toDataResponseSuccess(
+      "Upload avatar successfully!"
+    );
+    res.json(response);
   } catch (error) {
     throw new Error(error.message);
   }
-}
-);
+});
 module.exports = {
-  createUser, getAllUser, updateUser, setRemovedUser,
-  getByUsername, sendOtpRegister, verifyAndSaveRegister, changePassword, sendOtpForgetPass,
-  verifyAndSaveForgetPass, searchByKeyword, getAvatar, uploadAvatar
+  createUser,
+  getAllUser,
+  updateUser,
+  setRemovedUser,
+  getByUsername,
+  sendOtpRegister,
+  verifyAndSaveRegister,
+  changePassword,
+  sendOtpForgetPass,
+  verifyAndSaveForgetPass,
+  searchByKeyword,
+  getAvatar,
+  uploadAvatar,
+  login,
 };

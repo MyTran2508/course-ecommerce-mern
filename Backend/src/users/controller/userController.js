@@ -76,7 +76,7 @@ const updateUser = asyncHandler(async (req, res) => {
       }
     );
     const response = ResponseMapper.toDataResponseSuccess(updatedUser);
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     console.log(error);
     throw new ResourceNotFoundException(id + " does not exists in DB");
@@ -120,9 +120,9 @@ const getByUsername = asyncHandler(async (req, res) => {
   // Output: DataResponse<User>
   try {
     const getByUsername = await User.findOne({ username: req.params.username });
-    // console.log(getByUsername);
-    response = ResponseMapper.toDataResponseSuccess(getByUsername);
-    res.status(200).json(response);
+    console.log(getByUsername);
+    const response = ResponseMapper.toDataResponseSuccess(getByUsername);
+    return res.status(200).json(response);
   } catch (error) {
     throw new Error(error);
   }
@@ -350,7 +350,7 @@ const getAvatar = asyncHandler(async (req, res) => {
     }
     const imageBase64 = image.toString("base64");
     const response = ResponseMapper.toDataResponseSuccess(imageBase64);
-    res.status(200).json(response);
+    return res.status(200).json(response);
   } catch (error) {
     console.log(error);
     throw new Error(error);
@@ -396,7 +396,7 @@ const uploadAvatar = asyncHandler(async (req, res) => {
     const response = ResponseMapper.toDataResponseSuccess(
       "Upload avatar successfully!"
     );
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     throw new Error(error.message);
   }

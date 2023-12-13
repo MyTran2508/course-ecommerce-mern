@@ -86,6 +86,7 @@ const getById = async (req, res) => {
   }
 };
 
+// lấy những khóa học mới nhất
 const getNewestCourse = asyncHandler(async (req, res) => {
   const topicId = req.params.topicId;
   const size = req.params.size;
@@ -115,10 +116,40 @@ const getNewestCourse = asyncHandler(async (req, res) => {
 });
 
 // lấy những khóa học phổ biến nhất
-const getPopularCourse = asyncHandler(async (req, res) => {});
+const getPopularCourse = asyncHandler(async (req, res) => {
+  const userId = req.params.userId;
+  const size = req.params.size;
+  try {
+    const courses = await courseProgress
+      .findPopularCourses({ userId: userId })
+      .sort({ created: -1 })
+      .limit(size);
+    const response = ResponseMapper.toListResponseSuccess(courses);
+    res.json(response);
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+});
 
 // lấy danh sách khóa học theo topicId
-const getFiltedCourse = asyncHandler(async (req, res) => {});
+const getFiltedCourse = asyncHandler(async (req, res) => {
+  const topicId = req.params.topicId;
+  const level = req.params.level;
+  const language = req.params.language;
+  const price = req.params.price;
+  const size = req.params.size;
+  try {
+    const courses = await Course.filterCourses(topicId, level, language, price)
+      .sort({ created: -1 })
+      .limit(size);
+    const response = ResponseMapper.toListResponseSuccess(courses);
+    res.json(response);
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
+  }
+});
 
 const loadFile = asyncHandler(async (req, res) => {
   const filePath = req.query.path;

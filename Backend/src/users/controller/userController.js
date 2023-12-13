@@ -83,6 +83,39 @@ const updateUser = asyncHandler(async (req, res) => {
   }
 });
 
+const updateUserAdmin = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  validateId(id);
+
+  const savedUser = await User.findById(id);
+  if (!savedUser) {
+    throw new ResourceNotFoundException("Data doesn't exists");
+  }
+  try {
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      {
+        username: req?.body?.username,
+        email: req?.body?.email,
+        roles: req?.body?.roles,
+      },
+      {
+        new: true,
+      }
+    );
+    const response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    res.json(response);
+  } catch (error) {
+    console.log(error);
+    let response = ResponseMapper.toDataResponse(
+      "Data already exist",
+      StatusCode.DATA_CONFLICT,
+      StatusMessage.DATA_CONFLICT
+    );
+    res.json(response);
+  }
+});
+
 const login = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
   const findUser = await User.findOne({ username });
@@ -416,4 +449,5 @@ module.exports = {
   getAvatar,
   uploadAvatar,
   login,
+  updateUserAdmin,
 };

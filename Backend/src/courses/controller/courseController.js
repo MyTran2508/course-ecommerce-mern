@@ -1,5 +1,6 @@
 const Course = require("../model/courseModel");
-const Category = require("../model/courseModel");
+const User = require("../../users/model/userModel");
+const Category = require("../model/categoryModel");
 const asyncHandler = require("express-async-handler");
 const { ResponseMapper } = require("../../common/response/ResponseMapper");
 const validateId = require("../../common/utils/validateId");
@@ -17,20 +18,23 @@ const fs = require("fs");
 const unlinkFile = util.promisify(fs.unlink);
 
 const add = asyncHandler(async (req, res) => {
-  const topicId = req?.body?.topic._id;
-  const category = Category.findOne({ "topics._id": topicId });
-  console.log(category);
-  if (category) {
-    try {
-      const savedCourse = await Course.create(req.body);
-      const response = ResponseMapper.toDataResponseSuccess(savedCourse);
-      return res.json(response);
-    } catch (error) {
-      console.log(error);
-      throw new Error(error);
-    }
-  } else {
-    throw new ResourceNotFoundException("Data doesn't exists");
+  const savedUser = await User.findOne({ username: req.body.authorName });
+  if (!savedUser) {
+    throw new ResourceNotFoundException("User doesn't exists.");
+  }
+  try {
+    const savedCourse = await Course.create(req.body);
+    const response = ResponseMapper.toDataResponseSuccess(savedCourse);
+    return res.json(response);
+  } catch (error) {
+    console.log(error);
+    return res.json(
+      ResponseMapper.toDataResponse(
+        "",
+        StatusCode.DATA_CONFLICT,
+        StatusMessage.DATA_CONFLICT
+      )
+    );
   }
 });
 
@@ -45,12 +49,10 @@ const update = asyncHandler(async (req, res) => {
         price: req?.body?.price,
         level: req?.body?.level,
         language: req?.body?.language,
-        content: req?.body?.content,
         urlCourseImages: req?.body?.urlCourseImages,
         urlPromotionVideos: req?.body?.urlPromotionVideos,
         topic: req?.body?.topic,
         authorName: req?.body?.authorName,
-        isApproved: req?.body?.isApproved,
         updated: new Date().getTime(),
       },
       {
@@ -60,30 +62,50 @@ const update = asyncHandler(async (req, res) => {
     const response = ResponseMapper.toDataResponseSuccess(updatedCourse);
     res.json(response);
   } catch (error) {
-    console.log(error);
     throw new ResourceNotFoundException(id + " does not exists in DB");
   }
 });
 
-const getById = asyncHandler(async (req, res) => {
+const getById = async (req, res) => {
   const id = req.query.id;
-  const category = await Course.findById(id);
-  if (category) {
-    const response = ResponseMapper.toDataResponseSuccess(category);
+  const course = await Course.findById(id);
+  if (course) {
+    const category = await Category.findOne({ "topics._id": course.topic._id });
+
+    for (const topic of category.topics) {
+      if (topic._id.toString() === course.topic._id.toString()) {
+        course.topic = topic;
+        break;
+      }
+    }
+
+    const response = await ResponseMapper.toDataResponseSuccess(course);
     res.json(response);
   } else {
     throw new DataNotFoundException(id + " does not exists");
   }
-});
+};
 
 const getNewestCourse = asyncHandler(async (req, res) => {
   const topicId = req.params.topicId;
   const size = req.params.size;
-  console.log("Vao day");
   try {
     const courses = await Course.find({ "topic._id": topicId })
       .sort({ created: -1 })
       .limit(size);
+
+    for (const course of courses) {
+      const category = await Category.findOne({
+        "topics._id": course.topic._id,
+      });
+      for (const topic of category.topics) {
+        if (topic._id.toString() === course.topic._id.toString()) {
+          course.topic = topic;
+          break;
+        }
+      }
+    }
+
     const response = ResponseMapper.toListResponseSuccess(courses);
     res.json(response);
   } catch (error) {
@@ -134,6 +156,19 @@ const getAllCourseProgressByUserId = asyncHandler(async (req, res) => {
   const userId = req.params.userId;
   try {
     const courses = await Course.find({ "courseProgress.userId": userId });
+
+    for (const course of courses) {
+      const category = await Category.findOne({
+        "topics._id": course.topic._id,
+      });
+      for (const topic of category.topics) {
+        if (topic._id.toString() === course.topic._id.toString()) {
+          course.topic = topic;
+          break;
+        }
+      }
+    }
+
     const response = ResponseMapper.toListResponseSuccess(courses);
     res.json(response);
   } catch (error) {

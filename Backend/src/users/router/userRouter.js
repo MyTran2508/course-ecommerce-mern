@@ -17,6 +17,7 @@ const {
   getAvatar,
   uploadAvatar,
   login,
+  updateUserAdmin,
 } = require("../controller/userController");
 
 const storage = multer.memoryStorage();
@@ -36,5 +37,5 @@ router.get("/photos/:username", getAvatar);
 router.post("/photos/:username", uploadImg.single("file"), uploadAvatar);
 router.post("/login", login);
 router.post("/search-by-keyword", searchByKeyword);
-
+router.put("/update-admin/:id", updateUserAdmin);
 module.exports = router;

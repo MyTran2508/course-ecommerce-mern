@@ -46,17 +46,16 @@ courseProgressSchema.pre("save", async function (next) {
   next();
 });
 
-//function find popular courses with userId truy cập nhiều nhất
-courseProgressSchema.findPopularCourses("userId", async function (userId) {
-  const courses = await CourseProgress.find({ userId: userId });
-  const coursesId = [];
-  // lấy ra những khóa học có người học nhiều nhất
-  courses.forEach((course) => {
-    coursesId.push(course.courseId);
-  });
-  return coursesId;
-});
-
+// //function find popular courses with userId truy cập nhiều nhất
+// courseProgressSchema.findPopularCourses("userId", async function (userId) {
+//   const courses = await CourseProgress.find({ userId: userId });
+//   const coursesId = [];
+//   // lấy ra những khóa học có người học nhiều nhất
+//   courses.forEach((course) => {
+//     coursesId.push(course.courseId);
+//   });
+//   return coursesId;
+// });
 
 //Export the model
 module.exports = mongoose.model("CourseProgress", courseProgressSchema);

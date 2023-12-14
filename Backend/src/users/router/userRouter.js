@@ -6,7 +6,7 @@ const {
   createUser,
   getAllUser,
   updateUser,
-  setRemovedUser,
+  setActiveUser,
   getByUsername,
   sendOtpRegister,
   verifyAndSaveRegister,
@@ -26,7 +26,7 @@ const uploadImg = multer({ storage: storage });
 router.post(ApiResources.ADD, createUser);
 router.get(ApiResources.GET_ALL, getAllUser);
 router.put(ApiResources.UPDATE, updateUser);
-router.put(ApiResources.REMOVED, setRemovedUser);
+router.put(ApiResources.REMOVED, setActiveUser);
 router.get("/get-by-username/:username", getByUsername);
 router.post("/register/send-otp", sendOtpRegister);
 router.post("/register/verify-save", verifyAndSaveRegister);
@@ -37,5 +37,5 @@ router.get("/photos/:username", getAvatar);
 router.post("/photos/:username", uploadImg.single("file"), uploadAvatar);
 router.post("/login", login);
 router.post("/search-by-keyword", searchByKeyword);
-router.put("/update-admin/:id", updateUserAdmin);
+router.put("/update-admin", updateUserAdmin);
 module.exports = router;

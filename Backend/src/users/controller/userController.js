@@ -84,7 +84,8 @@ const updateUser = asyncHandler(async (req, res) => {
 });
 
 const updateUserAdmin = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.query;
+  console.log(id);
   validateId(id);
 
   const savedUser = await User.findById(id);
@@ -128,20 +129,14 @@ const login = asyncHandler(async (req, res) => {
   }
 });
 
-const setRemovedUser = asyncHandler(async (req, res) => {
+const setActiveUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateId(id);
   try {
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      {
-        removed: true,
-      },
-      {
-        new: true,
-      }
-    );
-    const response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    const user = await User.findById(id);
+    user.removed = !user.removed;
+    await user.save();
+    const response = ResponseMapper.toDataResponseSuccess(user);
     res.json(response);
   } catch (error) {
     console.log(error);
@@ -438,7 +433,7 @@ module.exports = {
   createUser,
   getAllUser,
   updateUser,
-  setRemovedUser,
+  setActiveUser,
   getByUsername,
   sendOtpRegister,
   verifyAndSaveRegister,

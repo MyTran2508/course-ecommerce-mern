@@ -22,8 +22,15 @@ const add = asyncHandler(async (req, res) => {
   if (!savedUser) {
     throw new ResourceNotFoundException("User doesn't exists.");
   }
+
   try {
-    const savedCourse = await Course.create(req.body);
+    const savedCourse = await Course.create({
+      name: req.body.name,
+      level: req.body.level.id,
+      language: req.body.language.id,
+      authorName: req.body.authorName,
+      topic: req.body.topic,
+    });
     const response = ResponseMapper.toDataResponseSuccess(savedCourse);
     return res.json(response);
   } catch (error) {
@@ -68,16 +75,16 @@ const update = asyncHandler(async (req, res) => {
 
 const getById = async (req, res) => {
   const id = req.query.id;
-  const course = await Course.findById(id);
+  const course = await Course.findById(id).populate(["level", "language"]);
   if (course) {
-    const category = await Category.findOne({ "topics._id": course.topic._id });
+    // const category = await Category.findOne({ "topics._id": course.topic._id });
 
-    for (const topic of category.topics) {
-      if (topic._id.toString() === course.topic._id.toString()) {
-        course.topic = topic;
-        break;
-      }
-    }
+    // for (const topic of category.topics) {
+    //   if (topic._id.toString() === course.topic._id.toString()) {
+    //     course.topic = topic;
+    //     break;
+    //   }
+    // }
 
     const response = await ResponseMapper.toDataResponseSuccess(course);
     res.json(response);
@@ -134,16 +141,24 @@ const getPopularCourse = asyncHandler(async (req, res) => {
 
 // lấy danh sách khóa học theo topicId
 const getFiltedCourse = asyncHandler(async (req, res) => {
-  const topicId = req.params.topicId;
-  const level = req.params.level;
-  const language = req.params.language;
-  const price = req.params.price;
-  const size = req.params.size;
+  const { pageIndex, pageSize, levelIds, languageIds, topicIds, keyword } =
+    req.body;
   try {
-    const courses = await Course.filterCourses(topicId, level, language, price)
-      .sort({ created: -1 })
-      .limit(size);
-    const response = ResponseMapper.toListResponseSuccess(courses);
+    const { data, totalItems } = await Course.filterCourses(
+      pageIndex,
+      pageSize,
+      levelIds,
+      languageIds,
+      topicIds,
+      keyword
+    );
+
+    const page = {
+      data: data,
+      totalItems: totalItems,
+      pageSize: data.length !== 0 ? pageSize : 0,
+    };
+    const response = ResponseMapper.toPagingResponseSuccess(page);
     res.json(response);
   } catch (error) {
     console.log(error);
@@ -152,7 +167,7 @@ const getFiltedCourse = asyncHandler(async (req, res) => {
 });
 
 const loadFile = asyncHandler(async (req, res) => {
-  const filePath = req.query.path;
+  const filePath = req.query.path || "";
   const readStream = await getFileStream(filePath);
   readStream.pipe(res);
 });

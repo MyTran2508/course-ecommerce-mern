@@ -68,7 +68,7 @@ class ResponseMapper {
   static toPagingResponse(page, statusCode, statusMessage) {
     if (page) {
       const totalRecords = page.totalItems; // Sửa lại tên phương thức
-      const totalPages = Math.ceil(totalRecords / page.pageSize); // Sửa lại tính toán totalPages
+      const totalPages = Math.ceil(totalRecords / page.pageSize) || 0; // Sửa lại tính toán totalPages
       const list = page.data; // Sửa lại tên phương thức
       return this.toListResponse(
         list,

@@ -22,7 +22,7 @@ const {
 const { isDocument, isVideo } = require("../utils/fileUtil");
 
 const add = asyncHandler(async (req, res) => {
-  const contentId = req?.body?.content.id;
+  const contentId = req?.body?.content._id;
   const content = await Content.findById(contentId);
   if (content) {
     const savedSection = await Section.create({
@@ -30,7 +30,7 @@ const add = asyncHandler(async (req, res) => {
       name: req?.body?.name,
       lectures: req?.body?.lectures,
       totalDurationVideoLectures: req?.body?.totalDurationVideoLectures,
-      content: req?.body?.content.id,
+      content: req?.body?.content._id,
     });
     await Content.findByIdAndUpdate(
       contentId,
@@ -57,6 +57,7 @@ const update = asyncHandler(async (req, res) => {
         name: req?.body?.name,
         ordinalNumber: req?.body?.ordinalNumber,
         lectures: req?.body?.lectures,
+        updated: new Date().getTime(),
       },
       {
         new: true,

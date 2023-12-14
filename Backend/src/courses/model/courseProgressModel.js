@@ -2,8 +2,8 @@ const mongoose = require("mongoose"); // Erase if already required
 
 // Declare the Schema of the Mongo model
 var courseProgressSchema = new mongoose.Schema({
+  course: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
   userId: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  courseId: { type: mongoose.Schema.Types.ObjectId, ref: "Course" },
   currentProgress: {
     type: Number,
   },
@@ -26,18 +26,6 @@ var courseProgressSchema = new mongoose.Schema({
   },
 });
 
-courseProgressSchema.set("toJSON", {
-  transform: function (doc, ret) {
-    if (ret.courseId) {
-      ret.course = { id: ret.courseId };
-      delete ret.courseId;
-    }
-    if (ret.userId) {
-      ret.userId = { id: ret.userId };
-    }
-  },
-});
-
 courseProgressSchema.pre("save", async function (next) {
   this.created = new Date().getTime();
   this.updated = new Date().getTime();
@@ -46,7 +34,7 @@ courseProgressSchema.pre("save", async function (next) {
   next();
 });
 
-// //function find popular courses with userId truy cập nhiều nhất
+//function find popular courses with userId truy cập nhiều nhất
 // courseProgressSchema.findPopularCourses("userId", async function (userId) {
 //   const courses = await CourseProgress.find({ userId: userId });
 //   const coursesId = [];

@@ -1,11 +1,13 @@
 const Course = require("../model/courseModel");
 const User = require("../../users/model/userModel");
 const Category = require("../model/categoryModel");
+const CourseProgress = require("../model/courseProgressModel");
 const asyncHandler = require("express-async-handler");
 const { ResponseMapper } = require("../../common/response/ResponseMapper");
 const validateId = require("../../common/utils/validateId");
 const { StatusCode } = require("../../common/message/StatusCode");
 const { StatusMessage } = require("../../common/message/StatusMessage");
+const mongoose = require("mongoose");
 const {
   DataAlreadyExistException,
   DataNotFoundException,
@@ -122,17 +124,67 @@ const getNewestCourse = asyncHandler(async (req, res) => {
   }
 });
 
-// lấy những khóa học phổ biến nhất
 const getPopularCourse = asyncHandler(async (req, res) => {
-  const userId = req.params.userId;
+  const topicId = req.params.topicId;
   const size = req.params.size;
+
   try {
-    const courses = await courseProgress
-      .findPopularCourses({ userId: userId })
-      .sort({ created: -1 })
-      .limit(size);
-    const response = ResponseMapper.toListResponseSuccess(courses);
-    res.json(response);
+    const pageSize = Number(size);
+    const topicObjectId = mongoose.Types.ObjectId(topicId);
+
+    const pipeline = [
+      {
+        $lookup: {
+          from: "courses",
+          localField: "course",
+          foreignField: "_id",
+          as: "course",
+        },
+      },
+      {
+        $match: {
+          "course.topic._id": topicObjectId,
+          "course.isApproved": true,
+        },
+      },
+      {
+        $group: {
+          _id: "$course._id",
+          count: { $sum: 1 },
+          course: { $first: "$course" },
+        },
+      },
+      {
+        $project: {
+          _id: 1,
+          count: 1,
+          course: { $arrayElemAt: ["$course", 0] },
+        },
+      },
+      {
+        $sort: { count: -1 },
+      },
+      {
+        $limit: pageSize,
+      },
+    ];
+
+    const results = await CourseProgress.aggregate(pipeline).exec();
+
+    const courses = results.map((item) => item.course);
+    for (const course of courses) {
+      const category = await Category.findOne({
+        "topics._id": course.topic._id,
+      });
+      for (const topic of category.topics) {
+        if (topic._id.toString() === course.topic._id.toString()) {
+          course.topic = topic;
+          break;
+        }
+      }
+    }
+
+    return res.json(ResponseMapper.toListResponseSuccess(courses));
   } catch (error) {
     console.log(error);
     throw new Error(error);

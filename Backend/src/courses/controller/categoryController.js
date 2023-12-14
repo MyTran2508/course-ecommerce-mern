@@ -38,6 +38,7 @@ const update = asyncHandler(async (req, res) => {
         name: req?.body?.name,
         description: req?.body?.description,
         topics: req?.body?.topics,
+        updated: new Date().getTime(),
       },
       {
         new: true,

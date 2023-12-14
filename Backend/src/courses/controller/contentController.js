@@ -35,7 +35,7 @@ const update = asyncHandler(async (req, res) => {
       id,
       {
         description: req?.body?.description,
-        course: req?.body.course.id,
+        // course: req?.body.course.id,
         updated: new Date().getTime(),
       },
       {

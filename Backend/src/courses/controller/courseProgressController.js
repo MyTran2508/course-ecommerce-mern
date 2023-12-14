@@ -102,8 +102,9 @@ const setRemoved = asyncHandler(async (req, res) => {
 });
 
 const addList = async (orderItems, userId) => {
-  orderItems.map(async (order) => {
-    const content = await getContentByCourseId(order.courseId);
+  console.log(orderItems);
+  orderItems.map(async (orderItem) => {
+    const content = await getContentByCourseId(orderItem.courseId);
     if (content) {
       let totalAmountOfLecture = 0;
       content.sections.map((section) => {
@@ -112,9 +113,11 @@ const addList = async (orderItems, userId) => {
       const courseProcess = {
         userId: userId,
         totalAmountOfLecture: totalAmountOfLecture,
-        courseId: order.courseId,
+        course: orderItem.courseId,
         currentProgress: 0,
       };
+
+      console.log(courseProcess);
 
       try {
         await CourseProgress.create(courseProcess);

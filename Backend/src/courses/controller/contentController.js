@@ -35,7 +35,7 @@ const update = asyncHandler(async (req, res) => {
       id,
       {
         description: req?.body?.description,
-        course: req?.body.course.id,
+        // course: req?.body.course.id,
         updated: new Date().getTime(),
       },
       {
@@ -51,7 +51,7 @@ const update = asyncHandler(async (req, res) => {
 });
 
 const add = asyncHandler(async (req, res) => {
-  const courseId = req?.body?.course.id;
+  const courseId = req?.body?.course._id;
   const savedCourse = await Course.findById(courseId);
   if (savedCourse) {
     const newContent = await Content.create({

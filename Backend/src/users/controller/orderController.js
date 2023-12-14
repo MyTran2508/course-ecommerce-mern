@@ -15,7 +15,7 @@ const {
 const add = asyncHandler(async (req, res) => {
   try {
     const orderItems = req?.body?.orderItems;
-    const userId = req?.body?.user?.id;
+    const userId = req?.body?.user?._id;
     const savedOrder = await Order.create({
       orderItems: orderItems,
       orderStatus: req?.body?.orderStatus,

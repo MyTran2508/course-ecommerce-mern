@@ -76,7 +76,7 @@ const updateUser = asyncHandler(async (req, res) => {
       }
     );
     const response = ResponseMapper.toDataResponseSuccess(updatedUser);
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     console.log(error);
     throw new ResourceNotFoundException(id + " does not exists in DB");
@@ -84,7 +84,8 @@ const updateUser = asyncHandler(async (req, res) => {
 });
 
 const updateUserAdmin = asyncHandler(async (req, res) => {
-  const { id } = req.params;
+  const { id } = req.query;
+  console.log(id);
   validateId(id);
 
   const savedUser = await User.findById(id);
@@ -128,20 +129,14 @@ const login = asyncHandler(async (req, res) => {
   }
 });
 
-const setRemovedUser = asyncHandler(async (req, res) => {
+const setActiveUser = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateId(id);
   try {
-    const updatedUser = await User.findByIdAndUpdate(
-      id,
-      {
-        removed: true,
-      },
-      {
-        new: true,
-      }
-    );
-    const response = ResponseMapper.toDataResponseSuccess(updatedUser);
+    const user = await User.findById(id);
+    user.removed = !user.removed;
+    await user.save();
+    const response = ResponseMapper.toDataResponseSuccess(user);
     res.json(response);
   } catch (error) {
     console.log(error);
@@ -153,9 +148,9 @@ const getByUsername = asyncHandler(async (req, res) => {
   // Output: DataResponse<User>
   try {
     const getByUsername = await User.findOne({ username: req.params.username });
-    // console.log(getByUsername);
-    response = ResponseMapper.toDataResponseSuccess(getByUsername);
-    res.status(200).json(response);
+    console.log(getByUsername);
+    const response = ResponseMapper.toDataResponseSuccess(getByUsername);
+    return res.status(200).json(response);
   } catch (error) {
     throw new Error(error);
   }
@@ -383,7 +378,7 @@ const getAvatar = asyncHandler(async (req, res) => {
     }
     const imageBase64 = image.toString("base64");
     const response = ResponseMapper.toDataResponseSuccess(imageBase64);
-    res.status(200).json(response);
+    return res.status(200).json(response);
   } catch (error) {
     console.log(error);
     throw new Error(error);
@@ -429,7 +424,7 @@ const uploadAvatar = asyncHandler(async (req, res) => {
     const response = ResponseMapper.toDataResponseSuccess(
       "Upload avatar successfully!"
     );
-    res.json(response);
+    return res.json(response);
   } catch (error) {
     throw new Error(error.message);
   }
@@ -438,7 +433,7 @@ module.exports = {
   createUser,
   getAllUser,
   updateUser,
-  setRemovedUser,
+  setActiveUser,
   getByUsername,
   sendOtpRegister,
   verifyAndSaveRegister,

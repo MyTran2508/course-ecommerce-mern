@@ -12,6 +12,9 @@ const {
   notFound,
   errorHandler,
 } = require("./common/error/errorHandlerMiddlewares");
+var cors = require("cors");
+
+app.use(cors());
 
 // config swagger
 // const swaggerUi = require("swagger-ui-express");
@@ -43,4 +46,3 @@ app.listen(PORT, () => {
 // // Path: Backend/src/common/config/dbConnect.js
 // const mongoose = require("mongoose");
 // const dotenv = require("dotenv").config();
-

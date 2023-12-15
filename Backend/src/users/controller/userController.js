@@ -303,7 +303,7 @@ const verifyAndSaveForgetPass = asyncHandler(async (req, res) => {
 async function searchUser(keyword, pageable) {
   const query = {
     $or: [
-      { username: { $regex: new RegExp(keyword, "i") } }, // Tìm kiếm không phân biệt chữ hoa/thường
+      { username: { $regex: new RegExp(keyword, "i") } },
       { email: { $regex: new RegExp(keyword, "i") } },
     ],
   };

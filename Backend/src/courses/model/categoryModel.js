@@ -11,10 +11,7 @@ var categorySchema = new mongoose.Schema({
   description: {
     type: String,
   },
-  topics: {
-    type: [topicSchema],
-    default: [],
-  },
+  topics: [{ type: mongoose.Schema.Types.ObjectId, ref: "Topic" }],
   removed: {
     type: Boolean,
     default: false,

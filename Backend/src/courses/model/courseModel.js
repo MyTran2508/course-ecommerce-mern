@@ -24,10 +24,7 @@ var courseSchema = new mongoose.Schema({
   urlPromotionVideos: {
     type: String,
   },
-  topic: {
-    type: topicSchema,
-    require: true,
-  },
+  topic: { type: mongoose.Schema.Types.ObjectId, ref: "Topic" },
   authorName: {
     type: String,
   },
@@ -103,6 +100,7 @@ courseSchema.statics.filterCourses = async function (
   const page = await this.find(query)
     .populate("level")
     .populate("language")
+    .populate("topic")
     .skip(pageIndex * pageSize)
     .limit(pageSize)
     .sort({ created: -1 })

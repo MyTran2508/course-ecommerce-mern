@@ -26,13 +26,7 @@ const add = asyncHandler(async (req, res) => {
   }
 
   try {
-    const savedCourse = await Course.create({
-      name: req.body.name,
-      level: req.body.level.id,
-      language: req.body.language.id,
-      authorName: req.body.authorName,
-      topic: req.body.topic,
-    });
+    const savedCourse = await Course.create(req.body);
     const response = ResponseMapper.toDataResponseSuccess(savedCourse);
     return res.json(response);
   } catch (error) {
@@ -77,47 +71,26 @@ const update = asyncHandler(async (req, res) => {
 
 const getById = async (req, res) => {
   const id = req.query.id;
-  const course = await Course.findById(id).populate(["level", "language"]);
-  if (course) {
-    // const category = await Category.findOne({ "topics._id": course.topic._id });
-
-    // for (const topic of category.topics) {
-    //   if (topic._id.toString() === course.topic._id.toString()) {
-    //     course.topic = topic;
-    //     break;
-    //   }
-    // }
-
-    const response = await ResponseMapper.toDataResponseSuccess(course);
-    res.json(response);
-  } else {
-    throw new DataNotFoundException(id + " does not exists");
-  }
+  const course = await Course.findById(id).populate([
+    "level",
+    "language",
+    "topic",
+  ]);
+  const response = await ResponseMapper.toDataResponseSuccess(course);
+  return res.json(response);
 };
 
-// lấy những khóa học mới nhất
 const getNewestCourse = asyncHandler(async (req, res) => {
   const topicId = req.params.topicId;
   const size = req.params.size;
   try {
     const courses = await Course.find({
-      "topic._id": topicId,
+      topic: topicId,
       isApproved: true,
     })
+      .populate(["level", "language", "topic"])
       .sort({ created: -1 })
       .limit(size);
-
-    for (const course of courses) {
-      const category = await Category.findOne({
-        "topics._id": course.topic._id,
-      });
-      for (const topic of category.topics) {
-        if (topic._id.toString() === course.topic._id.toString()) {
-          course.topic = topic;
-          break;
-        }
-      }
-    }
 
     const response = ResponseMapper.toListResponseSuccess(courses);
     res.json(response);
@@ -146,7 +119,7 @@ const getPopularCourse = asyncHandler(async (req, res) => {
       },
       {
         $match: {
-          "course.topic._id": topicObjectId,
+          "course.topic": topicObjectId,
           "course.isApproved": true,
         },
       },
@@ -172,22 +145,15 @@ const getPopularCourse = asyncHandler(async (req, res) => {
       },
     ];
 
-    const results = await CourseProgress.aggregate(pipeline).exec();
+    let results = await CourseProgress.aggregate(pipeline).exec();
 
-    const courses = results.map((item) => item.course);
-    for (const course of courses) {
-      const category = await Category.findOne({
-        "topics._id": course.topic._id,
-      });
-      for (const topic of category.topics) {
-        if (topic._id.toString() === course.topic._id.toString()) {
-          course.topic = topic;
-          break;
-        }
-      }
-    }
+    results = results.map((item) => item.course);
 
-    return res.json(ResponseMapper.toListResponseSuccess(courses));
+    await Course.populate(results, { path: "language" });
+    await Course.populate(results, { path: "level" });
+    await Course.populate(results, { path: "topic" });
+
+    return res.json(ResponseMapper.toListResponseSuccess(results));
   } catch (error) {
     console.log(error);
     throw new Error(error);

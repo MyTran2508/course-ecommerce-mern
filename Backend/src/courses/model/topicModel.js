@@ -9,4 +9,4 @@ var topicSchema = new mongoose.Schema({
   },
 });
 
-module.exports = topicSchema;
+module.exports = mongoose.model("Topic", topicSchema);

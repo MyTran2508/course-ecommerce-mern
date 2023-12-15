@@ -93,7 +93,10 @@ const getNewestCourse = asyncHandler(async (req, res) => {
   const topicId = req.params.topicId;
   const size = req.params.size;
   try {
-    const courses = await Course.find({ "topic._id": topicId })
+    const courses = await Course.find({
+      "topic._id": topicId,
+      isApproved: true,
+    })
       .sort({ created: -1 })
       .limit(size);
 

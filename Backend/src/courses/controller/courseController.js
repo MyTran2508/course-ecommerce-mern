@@ -187,13 +187,22 @@ const getFiltedCourse = asyncHandler(async (req, res) => {
   }
 });
 
+const streamToBase64 = async (readStream) => {
+  const chunks = [];
+  for await (const chunk of readStream) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString("base64");
+};
+
 const loadFile = asyncHandler(async (req, res) => {
   const filePath = req.query.path || "";
   const readStream = await getFileStream(filePath);
   if (!readStream) {
     throw new ResourceNotFoundException("Data doesn't exists");
   }
-  readStream.pipe(res);
+  const base64Data = await streamToBase64(readStream);
+  res.json(base64Data);
 });
 
 const uploadCourseImage = asyncHandler(async (req, res) => {

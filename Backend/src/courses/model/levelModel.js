@@ -1,13 +1,13 @@
-const mongoose = require('mongoose'); // Erase if already required
+const mongoose = require("mongoose"); // Erase if already required
 
 // Declare the Schema of the Mongo model
 var levelSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        enum: ['Beginner', 'Intermediate', 'Expert', 'All Level'],
-        default: 'All Level',
-    },
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
 });
 
 //Export the model
-module.exports = levelSchema
+module.exports = mongoose.model("Level", levelSchema);

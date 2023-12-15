@@ -1,13 +1,13 @@
-const mongoose = require('mongoose'); // Erase if already required
+const mongoose = require("mongoose"); // Erase if already required
 
 // Declare the Schema of the Mongo model
 var languageSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        enum: ['Vietnamese', 'English'],
-        default: 'Vietnamese',
-    },
+  name: {
+    type: String,
+    required: true,
+    unique: true,
+  },
 });
 
 //Export the model
-module.exports = languageSchema
+module.exports = mongoose.model("Language", languageSchema);

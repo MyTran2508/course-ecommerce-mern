@@ -2,6 +2,7 @@ const S3 = require("aws-sdk/clients/s3");
 require("aws-sdk/lib/maintenance_mode_message").suppress = true;
 const fs = require("fs");
 const path = require("path");
+const asyncHandler = require("express-async-handler");
 
 const accessKey = process.env.ACCESS_KEY;
 const secretKey = process.env.SECRET_KEY;
@@ -29,12 +30,19 @@ const uploadFile = async (filePath, file) => {
   return pathFile;
 };
 
-const getFileStream = (filePath) => {
+const getFileStream = async (filePath) => {
   const downloadParams = {
     Key: filePath,
     Bucket: bucket,
   };
-  return s3.getObject(downloadParams).createReadStream();
+
+  let isFileExists;
+  try {
+    await s3.headObject(downloadParams).promise();
+    isFileExists = true;
+  } catch (error) {}
+  if (!isFileExists) return isFileExists;
+  return await s3.getObject(downloadParams).createReadStream();
 };
 
 module.exports = { uploadFile, getFileStream };

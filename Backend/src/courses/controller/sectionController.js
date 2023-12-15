@@ -64,6 +64,10 @@ const update = asyncHandler(async (req, res) => {
       }
     );
 
+    if (!updatedSection) {
+      throw new ResourceNotFoundException(id + " does not exists in DB");
+    }
+
     const updatedNewSection = await Section.findByIdAndUpdate(
       id,
       {

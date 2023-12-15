@@ -15,7 +15,7 @@ const {
 
 const getById = asyncHandler(async (req, res) => {
   const id = req.query.id;
-  const content = await Content.findById(id);
+  const content = await Content.findById(id).populate(["sections", "course"]);
   if (content) {
     const sectionsId = content.sections;
     const listSection = await Section.find({ _id: { $in: sectionsId } });
@@ -76,9 +76,10 @@ const getByCourseId = asyncHandler(async (req, res) => {
 });
 
 const getContentByCourseId = async (courseId) => {
-  const content = await Content.findOne({ course: courseId }).populate(
-    "course"
-  );
+  const content = await Content.findOne({ course: courseId }).populate([
+    "sections",
+    "course",
+  ]);
   if (content) {
     const sectionsId = content.sections;
     const listSection = await Section.find({ _id: { $in: sectionsId } });

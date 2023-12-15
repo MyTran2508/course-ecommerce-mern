@@ -190,6 +190,9 @@ const getFiltedCourse = asyncHandler(async (req, res) => {
 const loadFile = asyncHandler(async (req, res) => {
   const filePath = req.query.path || "";
   const readStream = await getFileStream(filePath);
+  if (!readStream) {
+    throw new ResourceNotFoundException("Data doesn't exists");
+  }
   readStream.pipe(res);
 });
 

@@ -228,10 +228,8 @@ const loadFile = asyncHandler(async (req, res) => {
   if (!readStream) {
     res.send(null);
   }
-  res.send(readStream);
-
   const base64Data = await streamToBase64(readStream);
-  res.json(base64Data);
+  res.send(base64Data);
 });
 
 const uploadCourseImage = asyncHandler(async (req, res) => {
@@ -367,7 +365,7 @@ const searchCourse = async (keywords, pageable) => {
   const isCompletedContent = keywords[4];
 
   const query = {};
-  if (name !== null && name !== undefined) {
+  if (name !== null && name !== undefined && name !== "") {
     query.$or = [
       { name: { $regex: new RegExp(name, "i") } },
       { subTitle: { $regex: new RegExp(name, "i") } },

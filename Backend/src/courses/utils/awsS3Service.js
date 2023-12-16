@@ -42,24 +42,24 @@ const getFileStream = async (filePath) => {
   } catch (error) {}
   if (!isFileExists) return isFileExists;
 
-  const stream = s3.getObject(downloadParams).createReadStream();
-  const chunks = [];
+  return s3.getObject(downloadParams).createReadStream();
+  // const chunks = [];
 
-  return new Promise((resolve, reject) => {
-    stream.on("data", (chunk) => {
-      chunks.push(chunk);
-    });
+  // return new Promise((resolve, reject) => {
+  //   stream.on("data", (chunk) => {
+  //     chunks.push(chunk);
+  //   });
 
-    stream.on("end", () => {
-      const buffer = Buffer.concat(chunks);
-      const base64 = buffer.toString("base64");
-      resolve(base64);
-    });
+  //   stream.on("end", () => {
+  //     const buffer = Buffer.concat(chunks);
+  //     const base64 = buffer.toString("base64");
+  //     resolve(base64);
+  //   });
 
-    stream.on("error", (error) => {
-      reject(error);
-    });
-  });
+  //   stream.on("error", (error) => {
+  //     reject(error);
+  //   });
+  // });
 };
 
 module.exports = { uploadFile, getFileStream };

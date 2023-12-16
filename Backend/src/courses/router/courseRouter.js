@@ -12,6 +12,7 @@ const {
   uploadCourseImage,
   uploadCourseVideo,
   getAllCourseProgressByUserId,
+  getAll,
 } = require("../controller/courseController");
 const multer = require("multer");
 const { PATH_COURSE_IMAGE } = require("../utils/awsS3Constant");
@@ -22,6 +23,7 @@ const uploadVideo = multer({ dest: PATH_COURSE_VIDEO });
 router.get(ApiResources.GET_BY_ID, getById);
 router.post(ApiResources.ADD, add);
 router.put(ApiResources.UPDATE, update);
+router.get(ApiResources.GET_ALL, getAll);
 router.get("/download", loadFile);
 router.post("/images", uploadImage.single("file"), uploadCourseImage);
 router.post("/videos", uploadVideo.single("file"), uploadCourseVideo);

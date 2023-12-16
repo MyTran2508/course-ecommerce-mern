@@ -12,6 +12,9 @@ const {
   uploadCourseImage,
   uploadCourseVideo,
   getAllCourseProgressByUserId,
+  updateIsApproved,
+  updateAwaitingApproval,
+  searchByKeyword,
 } = require("../controller/courseController");
 const multer = require("multer");
 const { PATH_COURSE_IMAGE } = require("../utils/awsS3Constant");
@@ -29,5 +32,7 @@ router.get("/newest/:topicId/:size", getNewestCourse);
 router.get("/popular/:topicId/:size", getPopularCourse);
 router.post("/filter", getFiltedCourse);
 router.get("/get-all-by-user-id", getAllCourseProgressByUserId);
-
+router.post("/update-approved", updateIsApproved);
+router.post("/update-awaiting-approval", updateAwaitingApproval);
+router.post("/search-by-keyword", searchByKeyword);
 module.exports = router;

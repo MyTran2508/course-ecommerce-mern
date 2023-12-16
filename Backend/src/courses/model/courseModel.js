@@ -40,6 +40,12 @@ var courseSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  courseIssueReports: [
+    {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "CourseIssueReport",
+    },
+  ],
   removed: {
     type: Boolean,
     default: false,

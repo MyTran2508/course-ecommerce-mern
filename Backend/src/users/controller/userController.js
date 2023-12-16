@@ -122,7 +122,7 @@ const login = asyncHandler(async (req, res) => {
   const findUser = await User.findOne({ username });
   if (findUser && (await findUser.isPasswordMatched(password))) {
     res.json(
-      ResponseMapper.toDataResponseSuccess(generateToken(findUser?._id))
+      ResponseMapper.toDataResponseSuccess(generateToken(findUser?.username))
     );
   } else {
     throw new NotPermissionException("invalid access");

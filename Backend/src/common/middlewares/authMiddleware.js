@@ -1,6 +1,7 @@
 const User = require("../../users/model/userModel");
 const jwt = require("jsonwebtoken");
 const asyncHandler = require("express-async-handler");
+const { NotPermissionException } = require("../error/throwExceptionHandler");
 
 const authMiddleware = asyncHandler(async (req, res, next) => {
   let token;
@@ -10,12 +11,14 @@ const authMiddleware = asyncHandler(async (req, res, next) => {
       if (token) {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
         // console.log(decoded);
-        const user = await User.findById(decoded?.id);
+        const user = await User.findOne({ username: decoded?.username });
         req.user = user;
         next();
       }
     } catch (error) {
-      throw new Error("Not Authorized token expired, Please login again");
+      throw new NotPermissionException(
+        "Not Authorized token expired, Please login again"
+      );
     }
   } else {
     throw new Error("There is no token attached to header");

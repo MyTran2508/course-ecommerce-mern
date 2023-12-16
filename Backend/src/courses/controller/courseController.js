@@ -107,6 +107,16 @@ const getById = asyncHandler(async (req, res) => {
   }
 });
 
+const getAll = async (req, res) => {
+  const getAllCourse = await Course.find({ isApproved: true }).populate([
+    "level",
+    "language",
+    "topic",
+  ]);
+  const response = await ResponseMapper.toListResponseSuccess(getAllCourse);
+  return res.json(response);
+};
+
 const getNewestCourse = asyncHandler(async (req, res) => {
   const topicId = req.params.topicId;
   const size = req.params.size;
@@ -453,4 +463,5 @@ module.exports = {
   updateIsApproved,
   updateAwaitingApproval,
   searchByKeyword,
+  getAll,
 };

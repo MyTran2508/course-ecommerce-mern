@@ -7,10 +7,10 @@ const {
   getById,
   getByCourseId,
 } = require("../controller/contentController");
-
-router.post(ApiResources.ADD, add);
-router.put(ApiResources.UPDATE, update);
-router.get(ApiResources.GET_BY_ID, getById);
+const { authMiddleware } = require("../../common/middlewares/authMiddleware");
+router.post(ApiResources.ADD, authMiddleware, add);
+router.put(ApiResources.UPDATE, authMiddleware, update);
+router.get(ApiResources.GET_BY_ID, authMiddleware, getById);
 router.get("/get-by-course-id", getByCourseId);
 
 module.exports = router;

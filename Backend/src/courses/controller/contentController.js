@@ -58,6 +58,8 @@ const add = asyncHandler(async (req, res) => {
       description: req?.body?.description,
       course: courseId,
     });
+    savedCourse.content = newContent._id;
+    await savedCourse.save();
     const response = ResponseMapper.toDataResponseSuccess(newContent);
     return res.json(response);
   } else {

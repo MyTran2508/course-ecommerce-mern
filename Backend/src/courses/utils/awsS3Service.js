@@ -18,14 +18,13 @@ const s3 = new S3({
 const uploadFile = async (filePath, file) => {
   const fileStream = fs.createReadStream(file.path);
   const timestamp = new Date().getTime();
-  const pathFile = `${
-    filePath === "" ? file.destination : filePath
-  }${timestamp}_${file.originalname}`;
+  const pathFile = `${filePath}${timestamp}_${file.originalname}`;
   const uploadParams = {
     Bucket: bucket,
     Body: fileStream,
     Key: pathFile,
   };
+  // console.log(pathFile);
   await s3.upload(uploadParams).promise();
   return pathFile;
 };

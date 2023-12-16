@@ -301,14 +301,15 @@ const verifyAndSaveForgetPass = asyncHandler(async (req, res) => {
 });
 
 async function searchUser(keyword, pageable) {
-  const query = {
-    $or: [
+  const query = {};
+
+  if (keyword) {
+    query.$or = [
       { username: { $regex: new RegExp(keyword, "i") } },
       { email: { $regex: new RegExp(keyword, "i") } },
-    ],
-  };
+    ];
+  }
 
-  // try {
   let searchQuery = await User.find(query)
     .sort(pageable.sort)
     .skip(pageable.pageIndex * pageable.pageSize)
@@ -323,10 +324,6 @@ async function searchUser(keyword, pageable) {
     pageSize: pageable.pageSize,
     totalItems: await User.countDocuments(query).exec(),
   };
-  // }
-  // catch (error) {
-  //   throw new Error(error.message);
-  // }
 }
 
 const searchByKeyword = async (req, res) => {

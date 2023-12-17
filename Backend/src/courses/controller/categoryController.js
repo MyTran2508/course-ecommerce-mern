@@ -1,9 +1,11 @@
 const Category = require("../model/categoryModel");
+const Topic = require("../model/topicModel");
 const asyncHandler = require("express-async-handler");
 const { ResponseMapper } = require("../../common/response/ResponseMapper");
 const validateId = require("../../common/utils/validateId");
 const { StatusCode } = require("../../common/message/StatusCode");
 const { StatusMessage } = require("../../common/message/StatusMessage");
+const mongoose = require("mongoose");
 const {
   DataAlreadyExistException,
   DataNotFoundException,
@@ -15,9 +17,12 @@ const add = asyncHandler(async (req, res) => {
   const name = req?.body?.name;
   const savedCategory = await Category.findOne({ name: name });
   if (!savedCategory) {
-    const newCategory = await Category.create(req.body);
-    const response = ResponseMapper.toDataResponseSuccess(newCategory);
-    return res.json(response);
+    const savedTopics = await Topic.insertMany(req?.body?.topics);
+
+    const category = req?.body;
+    category.topics = savedTopics.map((topic) => topic.id);
+    const savedCategory = await Category.create(category);
+    return res.json(ResponseMapper.toDataResponseSuccess(savedCategory));
   } else {
     const response = ResponseMapper.toDataResponse(
       "Data already exist",
@@ -31,14 +36,46 @@ const add = asyncHandler(async (req, res) => {
 const update = asyncHandler(async (req, res) => {
   const { id } = req.params;
   validateId(id);
+
+  let topicIds = [];
+
   try {
+    for (const topic of req.body.topics) {
+      if (topic._id) {
+        const updatedTopic = await Topic.findByIdAndUpdate(
+          topic._id,
+          {
+            name: topic.name,
+            description: topic.description,
+          },
+          {
+            new: true,
+          }
+        );
+
+        topicIds.push(updatedTopic._id);
+      } else {
+        const createdTopic = await Topic.create(topic);
+        console.log(createdTopic);
+        topicIds.push(createdTopic._id);
+      }
+    }
+
     const updatedCategory = await Category.findByIdAndUpdate(
       id,
       {
-        name: req?.body?.name,
-        description: req?.body?.description,
-        topics: req?.body?.topics,
-        updated: new Date().getTime(),
+        $set: {
+          name: req?.body?.name,
+          description: req?.body?.description,
+          updated: new Date().getTime(),
+        },
+        $addToSet: {
+          topics: {
+            $each: topicIds.map(
+              (topicId) => new mongoose.Types.ObjectId(topicId)
+            ),
+          },
+        },
       },
       {
         new: true,
@@ -54,7 +91,7 @@ const update = asyncHandler(async (req, res) => {
 
 const getAll = asyncHandler(async (req, res) => {
   try {
-    const getCategories = await Category.find();
+    const getCategories = await Category.find().populate("topics");
     console.log(getCategories);
     const response = ResponseMapper.toListResponseSuccess(getCategories);
     res.json(response);
@@ -66,7 +103,7 @@ const getAll = asyncHandler(async (req, res) => {
 
 const getById = asyncHandler(async (req, res) => {
   const id = req.query.id;
-  const category = await Category.findById(id);
+  const category = await Category.findById(id).populate("topics");
   if (category) {
     const response = ResponseMapper.toDataResponseSuccess(category);
     res.json(response);
@@ -77,7 +114,7 @@ const getById = asyncHandler(async (req, res) => {
 
 const getByName = asyncHandler(async (req, res) => {
   const { name } = req.params;
-  const category = await Category.findOne({ name: name });
+  const category = await Category.findOne({ name: name }).populate("topics");
   if (category) {
     const response = ResponseMapper.toDataResponseSuccess(category);
     res.json(response);

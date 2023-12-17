@@ -22,7 +22,7 @@ const hasAccessToCourse = asyncHandler(async (req, res) => {
   try {
     const courseProcess = await CourseProgress.findOne({
       userId: userId,
-      courseId: courseId,
+      course: courseId,
     });
     if (courseProcess) {
       response = ResponseMapper.toDataResponseSuccess(true);
@@ -43,7 +43,7 @@ const updateCurrentProgress = asyncHandler(async (req, res) => {
   try {
     const courseProcess = await CourseProgress.findOne({
       userId: userId,
-      courseId: courseId,
+      course: courseId,
     });
     if (courseProcess) {
       if (courseProcess.currentProgress < courseProcess.totalAmountOfLecture) {
@@ -64,10 +64,11 @@ const getByUserIdAndCourseId = asyncHandler(async (req, res) => {
   let response;
   const userId = req?.query.userId;
   const courseId = req?.query.courseId;
+  console.log(userId, courseId);
   try {
     const courseProcess = await CourseProgress.findOne({
       userId: userId,
-      courseId: courseId,
+      course: courseId,
     });
     if (courseProcess) {
       response = ResponseMapper.toDataResponseSuccess(courseProcess);
@@ -76,7 +77,7 @@ const getByUserIdAndCourseId = asyncHandler(async (req, res) => {
     }
     return res.json(response);
   } catch (error) {
-    console.log(error);
+    throw new Error(error);
   }
 });
 

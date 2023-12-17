@@ -17,7 +17,7 @@ const {
   ResourceNotFoundException,
   NotPermissionException,
 } = require("../../common/error/throwExceptionHandler");
-const { sendMail } = require("../utils/mailUtil");
+const sendMail = require("../utils/mailUtil");
 const { generateOTP, validateOTP } = require("../utils/otpUtil");
 const typeMessage = require("../utils/typeMessage");
 // const { StatusMessage } = require("../../common/message/StatusMessage");
@@ -122,7 +122,7 @@ const login = asyncHandler(async (req, res) => {
   const findUser = await User.findOne({ username });
   if (findUser && (await findUser.isPasswordMatched(password))) {
     res.json(
-      ResponseMapper.toDataResponseSuccess(generateToken(findUser?._id))
+      ResponseMapper.toDataResponseSuccess(generateToken(findUser?.username))
     );
   } else {
     throw new NotPermissionException("invalid access");
@@ -301,14 +301,15 @@ const verifyAndSaveForgetPass = asyncHandler(async (req, res) => {
 });
 
 async function searchUser(keyword, pageable) {
-  const query = {
-    $or: [
-      { username: { $regex: new RegExp(keyword, "i") } }, // Tìm kiếm không phân biệt chữ hoa/thường
-      { email: { $regex: new RegExp(keyword, "i") } },
-    ],
-  };
+  const query = {};
 
-  // try {
+  if (keyword) {
+    query.$or = [
+      { username: { $regex: new RegExp(keyword, "i") } },
+      { email: { $regex: new RegExp(keyword, "i") } },
+    ];
+  }
+
   let searchQuery = await User.find(query)
     .sort(pageable.sort)
     .skip(pageable.pageIndex * pageable.pageSize)
@@ -323,10 +324,6 @@ async function searchUser(keyword, pageable) {
     pageSize: pageable.pageSize,
     totalItems: await User.countDocuments(query).exec(),
   };
-  // }
-  // catch (error) {
-  //   throw new Error(error.message);
-  // }
 }
 
 const searchByKeyword = async (req, res) => {

@@ -2,6 +2,7 @@ const Course = require("../model/courseModel");
 const User = require("../../users/model/userModel");
 const Category = require("../model/categoryModel");
 const CourseProgress = require("../model/courseProgressModel");
+const CourseIssueReport = require("../model/courseIssueReportModel");
 const asyncHandler = require("express-async-handler");
 const { ResponseMapper } = require("../../common/response/ResponseMapper");
 const validateId = require("../../common/utils/validateId");
@@ -28,10 +29,10 @@ const add = asyncHandler(async (req, res) => {
   try {
     const savedCourse = await Course.create({
       name: req.body.name,
-      level: req.body.level.id,
-      language: req.body.language.id,
+      level: req.body.level._id,
+      language: req.body.language._id,
       authorName: req.body.authorName,
-      topic: req.body.topic,
+      topic: req.body.topic._id,
     });
     const response = ResponseMapper.toDataResponseSuccess(savedCourse);
     return res.json(response);
@@ -44,6 +45,19 @@ const add = asyncHandler(async (req, res) => {
         StatusMessage.DATA_CONFLICT
       )
     );
+  }
+});
+const getAll = asyncHandler(async (req, res) => {
+  try {
+    const courses = await Course.find({ isApproved: true }).populate([
+      "topic",
+      "level",
+      "language",
+    ]);
+    const response = ResponseMapper.toDataResponseSuccess(courses);
+    return res.json(response);
+  } catch (error) {
+    console.log(error);
   }
 });
 
@@ -75,46 +89,35 @@ const update = asyncHandler(async (req, res) => {
   }
 });
 
-const getById = async (req, res) => {
+const getById = asyncHandler(async (req, res) => {
   const id = req.query.id;
-  const course = await Course.findById(id).populate(["level", "language"]);
-  if (course) {
-    // const category = await Category.findOne({ "topics._id": course.topic._id });
-
-    // for (const topic of category.topics) {
-    //   if (topic._id.toString() === course.topic._id.toString()) {
-    //     course.topic = topic;
-    //     break;
-    //   }
-    // }
-
+  try {
+    const course = await Course.findById(id).populate([
+      "level",
+      "language",
+      "topic",
+      "courseIssueReports",
+    ]);
+    course.courseIssueReports.sort((a, b) => b.created - a.created);
     const response = await ResponseMapper.toDataResponseSuccess(course);
-    res.json(response);
-  } else {
-    throw new DataNotFoundException(id + " does not exists");
+    return res.json(response);
+  } catch (error) {
+    console.log(error);
+    throw new Error(error);
   }
-};
+});
 
-// lấy những khóa học mới nhất
 const getNewestCourse = asyncHandler(async (req, res) => {
   const topicId = req.params.topicId;
   const size = req.params.size;
   try {
-    const courses = await Course.find({ "topic._id": topicId })
+    const courses = await Course.find({
+      topic: topicId,
+      isApproved: true,
+    })
+      .populate(["level", "language", "topic"])
       .sort({ created: -1 })
       .limit(size);
-
-    for (const course of courses) {
-      const category = await Category.findOne({
-        "topics._id": course.topic._id,
-      });
-      for (const topic of category.topics) {
-        if (topic._id.toString() === course.topic._id.toString()) {
-          course.topic = topic;
-          break;
-        }
-      }
-    }
 
     const response = ResponseMapper.toListResponseSuccess(courses);
     res.json(response);
@@ -143,7 +146,7 @@ const getPopularCourse = asyncHandler(async (req, res) => {
       },
       {
         $match: {
-          "course.topic._id": topicObjectId,
+          "course.topic": topicObjectId,
           "course.isApproved": true,
         },
       },
@@ -169,22 +172,15 @@ const getPopularCourse = asyncHandler(async (req, res) => {
       },
     ];
 
-    const results = await CourseProgress.aggregate(pipeline).exec();
+    let results = await CourseProgress.aggregate(pipeline).exec();
 
-    const courses = results.map((item) => item.course);
-    for (const course of courses) {
-      const category = await Category.findOne({
-        "topics._id": course.topic._id,
-      });
-      for (const topic of category.topics) {
-        if (topic._id.toString() === course.topic._id.toString()) {
-          course.topic = topic;
-          break;
-        }
-      }
-    }
+    results = results.map((item) => item.course);
 
-    return res.json(ResponseMapper.toListResponseSuccess(courses));
+    await Course.populate(results, { path: "language" });
+    await Course.populate(results, { path: "level" });
+    await Course.populate(results, { path: "topic" });
+
+    return res.json(ResponseMapper.toListResponseSuccess(results));
   } catch (error) {
     console.log(error);
     throw new Error(error);
@@ -218,10 +214,22 @@ const getFiltedCourse = asyncHandler(async (req, res) => {
   }
 });
 
+const streamToBase64 = async (readStream) => {
+  const chunks = [];
+  for await (const chunk of readStream) {
+    chunks.push(chunk);
+  }
+  return Buffer.concat(chunks).toString("base64");
+};
+
 const loadFile = asyncHandler(async (req, res) => {
   const filePath = req.query.path || "";
   const readStream = await getFileStream(filePath);
-  readStream.pipe(res);
+  if (!readStream) {
+    res.send(null);
+  }
+  const base64Data = await streamToBase64(readStream);
+  res.send(base64Data);
 });
 
 const uploadCourseImage = asyncHandler(async (req, res) => {
@@ -251,29 +259,192 @@ const uploadCourseVideo = asyncHandler(async (req, res) => {
 });
 
 const getAllCourseProgressByUserId = asyncHandler(async (req, res) => {
-  const userId = req.params.userId;
+  const { userId, pageIndex, pageSize } = req.query;
   try {
-    const courses = await Course.find({ "courseProgress.userId": userId });
-
-    for (const course of courses) {
-      const category = await Category.findOne({
-        "topics._id": course.topic._id,
-      });
-      for (const topic of category.topics) {
-        if (topic._id.toString() === course.topic._id.toString()) {
-          course.topic = topic;
-          break;
-        }
-      }
-    }
-
+    const courseProgress = await CourseProgress.find({ userId: userId })
+      .populate("course")
+      .select("course")
+      .skip(pageIndex * pageSize)
+      .limit(pageSize);
+    const courses = courseProgress.map(
+      (courseProgress) => courseProgress.course
+    );
     const response = ResponseMapper.toListResponseSuccess(courses);
     res.json(response);
   } catch (error) {
-    console.log(error);
-    throw new Error(error);
+    return res.json(
+      ResponseMapper.toDataResponse(
+        "",
+        StatusCode.DATA_NOT_MAP,
+        StatusMessage.DATA_NOT_MAP
+      )
+    );
   }
 });
+
+const updateIsApproved = asyncHandler(async (req, res) => {
+  const id = req.query.id;
+  const isApproved = req.query.isApproved;
+  const courseIssueReport = req.body;
+  const course = await Course.findById(id);
+  if (!course) {
+    throw new ResourceNotFoundException("Course doesn't exists.");
+  }
+  if (isApproved === "true") {
+    if (course.isCompletedContent && course.isAwaitingApproval) {
+      course.isApproved = true;
+      await course.save();
+      return res.json(
+        ResponseMapper.toDataResponseSuccess("Update successful")
+      );
+    } else {
+      return res.json(
+        ResponseMapper.toDataResponse(
+          "Content is in incompleted",
+          StatusCode.DATA_NOT_MAP,
+          StatusCode.DATA_NOT_MAP
+        )
+      );
+    }
+  } else {
+    courseIssueReport.course = course._id;
+    const savedCourseIssueReport = await CourseIssueReport.create(
+      courseIssueReport
+    );
+    course.courseIssueReports.push(savedCourseIssueReport);
+    course.isAwaitingApproval = false;
+    await course.save();
+    res.json(ResponseMapper.toDataResponseSuccess("Update successful"));
+  }
+});
+
+const updateAwaitingApproval = asyncHandler(async (req, res) => {
+  const id = req.query.id;
+  const isAwaitingApproval = req.query.isAwaitingApproval;
+
+  const course = await Course.findById(id).populate({
+    path: "content",
+    populate: {
+      path: "sections",
+      model: "Section",
+    },
+  });
+
+  if (!course) {
+    throw new ResourceNotFoundException("Course doesn't exists.");
+  }
+  if (isAwaitingApproval && (await updateCompletedContent(course)) == false) {
+    return res.json(
+      ResponseMapper.toDataResponse(
+        "Course content is incomplete",
+        StatusCode.DATA_NOT_MAP,
+        StatusMessage.DATA_NOT_MAP
+      )
+    );
+  } else {
+    course.isAwaitingApproval = isAwaitingApproval;
+    await course.save();
+    res.json(ResponseMapper.toDataResponseSuccess("Update succcessful"));
+  }
+});
+
+const updateCompletedContent = async (course) => {
+  if (!course.isCompletedContent) {
+    if (
+      course.content &&
+      course.content.description &&
+      course.content.sections.length > 0 &&
+      course.content.sections[0].lectures.length > 0
+    ) {
+      course.isCompletedContent = true;
+      await course.save();
+    } else {
+      return false;
+    }
+  }
+  return true;
+};
+
+const searchCourse = async (keywords, pageable) => {
+  const name = keywords[0];
+  const authorName = keywords[1];
+  const isApproved = keywords[2];
+  const isAwaitingApproval = keywords[3];
+  const isCompletedContent = keywords[4];
+
+  const query = {};
+  if (name !== null && name !== undefined && name !== "") {
+    query.$or = [
+      { name: { $regex: new RegExp(name, "i") } },
+      { subTitle: { $regex: new RegExp(name, "i") } },
+    ];
+  }
+
+  if (authorName !== null && authorName !== undefined) {
+    query.authorName = authorName;
+  }
+
+  if (isApproved !== null && isApproved !== undefined) {
+    query.isApproved = isApproved;
+  }
+
+  if (isAwaitingApproval !== null && isAwaitingApproval !== undefined) {
+    query.isAwaitingApproval = isAwaitingApproval;
+  }
+
+  if (isCompletedContent !== null && isCompletedContent !== undefined) {
+    query.isCompletedContent = isCompletedContent;
+  }
+
+  let searchQuery = await Course.find(query)
+    .populate(["courseIssueReports", "level", "language", "topic"])
+    .sort(pageable.sort)
+    .skip(pageable.pageIndex * pageable.pageSize)
+    .limit(pageable.pageSize)
+    .exec();
+
+  let results = await searchQuery;
+  results.forEach((course) => {
+    course.courseIssueReports.sort((a, b) => b.created - a.created);
+  });
+
+  return {
+    data: results,
+    pageIndex: pageable.pageIndex,
+    pageSize: pageable.pageSize,
+    totalItems: await Course.countDocuments(query).exec(),
+  };
+};
+
+const searchByKeyword = async (req, res) => {
+  const searchByKeywordDto = req.body;
+  let sort = null;
+  let pageRequest = null;
+  if (searchByKeywordDto.sortBy && searchByKeywordDto.sortBy.length > 0) {
+    sort = {};
+    sort[searchByKeywordDto.sortBy] =
+      searchByKeywordDto.isDecrease || searchByKeywordDto.isDecrease == null
+        ? -1
+        : 1;
+  }
+
+  if (sort) {
+    pageRequest = {
+      pageIndex: searchByKeywordDto.pageIndex,
+      pageSize: searchByKeywordDto.pageSize,
+      sort: sort,
+    };
+  } else {
+    pageRequest = {
+      pageIndex: searchByKeywordDto.pageIndex,
+      pageSize: searchByKeywordDto.pageSize,
+    };
+  }
+
+  const results = await searchCourse(searchByKeywordDto.keyword, pageRequest);
+
+  res.json(ResponseMapper.toPagingResponseSuccess(results));
+};
 
 module.exports = {
   add,
@@ -286,4 +457,8 @@ module.exports = {
   uploadCourseImage,
   uploadCourseVideo,
   getAllCourseProgressByUserId,
+  getAll,
+  updateIsApproved,
+  updateAwaitingApproval,
+  searchByKeyword,
 };

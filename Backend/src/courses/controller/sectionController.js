@@ -64,6 +64,10 @@ const update = asyncHandler(async (req, res) => {
       }
     );
 
+    if (!updatedSection) {
+      throw new ResourceNotFoundException(id + " does not exists in DB");
+    }
+
     const updatedNewSection = await Section.findByIdAndUpdate(
       id,
       {
@@ -103,15 +107,13 @@ const uploadFileSection = asyncHandler(async (req, res) => {
   let idx = 0;
 
   for (let file of files) {
+    console.log(file);
     try {
-      if (isDocument(file)) {
+      if (await isDocument(file)) {
         const path = await uploadFile(PATH_COURSE_DOCUMENT, file);
-        await unlinkFile(file.path);
         listPath.push(path);
-      } else if (isVideo(file)) {
-        console.log(file.ordinalName);
+      } else if (await isVideo(file)) {
         const path = await uploadFile(PATH_COURSE_LECTURE, file);
-        await unlinkFile(file.path);
         listPath.push(path);
       } else {
         listError.push(idx);

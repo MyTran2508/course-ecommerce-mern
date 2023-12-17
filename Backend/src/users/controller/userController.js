@@ -17,7 +17,7 @@ const {
   ResourceNotFoundException,
   NotPermissionException,
 } = require("../../common/error/throwExceptionHandler");
-const { sendMail } = require("../utils/mailUtil");
+const sendMail = require("../utils/mailUtil");
 const { generateOTP, validateOTP } = require("../utils/otpUtil");
 const typeMessage = require("../utils/typeMessage");
 // const { StatusMessage } = require("../../common/message/StatusMessage");

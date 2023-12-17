@@ -9,7 +9,7 @@ var courseIssueReportSchema = new mongoose.Schema({
   },
   message: {
     type: String,
-    required: true,
+    // required: true,
   },
   severityLevel: {
     type: String,

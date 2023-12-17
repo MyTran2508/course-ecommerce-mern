@@ -16,7 +16,6 @@ const {
   updateIsApproved,
   updateAwaitingApproval,
   searchByKeyword,
-  getAll,
 } = require("../controller/courseController");
 const { authMiddleware } = require("../../common/middlewares/authMiddleware");
 const multer = require("multer");

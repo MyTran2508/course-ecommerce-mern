@@ -29,10 +29,10 @@ const add = asyncHandler(async (req, res) => {
   try {
     const savedCourse = await Course.create({
       name: req.body.name,
-      level: req.body.level.id,
-      language: req.body.language.id,
+      level: req.body.level._id,
+      language: req.body.language._id,
       authorName: req.body.authorName,
-      topic: req.body.topic.id,
+      topic: req.body.topic._id,
     });
     const response = ResponseMapper.toDataResponseSuccess(savedCourse);
     return res.json(response);
@@ -106,16 +106,6 @@ const getById = asyncHandler(async (req, res) => {
     throw new Error(error);
   }
 });
-
-const getAll = async (req, res) => {
-  const getAllCourse = await Course.find({ isApproved: true }).populate([
-    "level",
-    "language",
-    "topic",
-  ]);
-  const response = await ResponseMapper.toListResponseSuccess(getAllCourse);
-  return res.json(response);
-};
 
 const getNewestCourse = asyncHandler(async (req, res) => {
   const topicId = req.params.topicId;
@@ -269,18 +259,26 @@ const uploadCourseVideo = asyncHandler(async (req, res) => {
 });
 
 const getAllCourseProgressByUserId = asyncHandler(async (req, res) => {
-  const { userId, pageIndex, pageSize } = req.params;
+  const { userId, pageIndex, pageSize } = req.query;
   try {
-    const courses = await Course.find({ "courseProgress.userId": userId })
-      .populate(["language", "level", "topic"])
+    const courseProgress = await CourseProgress.find({ userId: userId })
+      .populate("course")
+      .select("course")
       .skip(pageIndex * pageSize)
       .limit(pageSize);
-
+    const courses = courseProgress.map(
+      (courseProgress) => courseProgress.course
+    );
     const response = ResponseMapper.toListResponseSuccess(courses);
     res.json(response);
   } catch (error) {
-    console.log(error);
-    throw new Error(error);
+    return res.json(
+      ResponseMapper.toDataResponse(
+        "",
+        StatusCode.DATA_NOT_MAP,
+        StatusMessage.DATA_NOT_MAP
+      )
+    );
   }
 });
 
@@ -292,7 +290,7 @@ const updateIsApproved = asyncHandler(async (req, res) => {
   if (!course) {
     throw new ResourceNotFoundException("Course doesn't exists.");
   }
-  if (isApproved == true) {
+  if (isApproved === "true") {
     if (course.isCompletedContent && course.isAwaitingApproval) {
       course.isApproved = true;
       await course.save();
@@ -463,5 +461,4 @@ module.exports = {
   updateIsApproved,
   updateAwaitingApproval,
   searchByKeyword,
-  getAll,
 };

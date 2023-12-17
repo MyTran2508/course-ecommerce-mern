@@ -84,7 +84,9 @@ const getContentByCourseId = async (courseId) => {
   ]);
   if (content) {
     const sectionsId = content.sections;
-    const listSection = await Section.find({ _id: { $in: sectionsId } });
+    const listSection = await Section.find({ _id: { $in: sectionsId } }).sort({
+      ordinalNumber: 1,
+    });
     content.sections = listSection;
     return content;
   } else {
